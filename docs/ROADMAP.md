@@ -78,13 +78,35 @@ Core authentication, user profile, database layer, Docker setup.
       in-memory Qdrant with real embeddings, Tutor Agent graph tests against
       a fake chat model, quiz/memory/ownership tests)
 
-## Phase 4 — Speech Engine, Conversation Mode
+## Phase 4 — Speech Engine, Conversation Mode — Done ✅
 
-- [ ] Whisper STT integration (this is where MinIO starts getting used — audio
-      blob storage)
-- [ ] Configurable TTS provider
-- [ ] Conversation mode: turn-taking spoken dialogue, evaluated for
-      pronunciation/fluency/grammar/vocabulary
+- [x] Whisper STT: `app/ai/speech/stt.py` runs `faster-whisper` locally
+      (CPU, int8, no API key) — model downloaded once and cached in
+      `.whisper_cache/`, same lazy-cache shape as fastembed's embedding model
+- [x] TTS: `app/ai/speech/tts.py` shells out to Piper's official CLI binary
+      (not the `piper-tts` Python package — its native `piper-phonemize`
+      dependency has no Linux ARM64 wheel, which this backend's Docker image
+      needs on Apple Silicon). Binary + `de_DE-thorsten-medium` voice
+      downloaded once and cached in `.piper_cache/`
+- [x] MinIO now actually in use: `app/infrastructure/object_store/` stores
+      both the learner's uploaded recordings and the synthesized replies,
+      streamed back through an authenticated backend endpoint
+      (`GET /speech/turns/{id}/audio`) rather than a public presigned URL
+- [x] Conversation Agent (`app/ai/conversation_agent.py`): a 2-node LangGraph
+      graph (generate → parse) reusing the Tutor Agent's Claude client/
+      `LLMNotConfiguredError` contract. One Claude call per turn continues
+      the dialogue *and* scores the learner's grammar/vocabulary
+- [x] Pronunciation/fluency are **not** faked — Claude has no audio input, so
+      there's no real signal for either yet; the frontend shows them as
+      locked (`LockedInsights`) rather than the API inventing a number
+- [x] `speech_conversations` / `speech_turns` tables, ownership-checked like
+      every other per-user resource
+- [x] Frontend: `/conversation` — `MediaRecorder`-based mic capture, turn
+      history with inline audio playback and grammar/vocabulary feedback
+- [x] 75 passing pytest tests (10 new: Conversation Agent graph tests with a
+      fake chat model, STT/TTS wrapper tests with fake underlying
+      model/voice objects, turn persistence/ownership/503 endpoint tests
+      with a fake in-memory object store)
 
 ## Phase 5 — Recommendation Engine, ML, Analytics
 

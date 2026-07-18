@@ -80,11 +80,19 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str | None = None
     ANTHROPIC_MODEL: str = "claude-sonnet-5"
 
-    # --- Object storage (wired up starting Phase 4 / speech audio) ---
+    # --- Object storage (Phase 4: speech audio blobs) ---
     MINIO_ENDPOINT: str = "localhost:9000"
     MINIO_ACCESS_KEY: str = "deutschai"
     MINIO_SECRET_KEY: str = "deutschai123"
     MINIO_BUCKET: str = "deutschai-media"
+
+    # --- Speech engine (Phase 4) ---
+    # faster-whisper model size — "base" is a CPU-friendly tradeoff for local dev;
+    # bump to "small"/"medium" for better accuracy if the host has the CPU to spare.
+    WHISPER_MODEL_SIZE: str = "base"
+    # Piper voice name (rhasspy/piper-voices on Hugging Face), downloaded and
+    # cached locally on first use — same pattern as fastembed's embedding model.
+    PIPER_VOICE: str = "de_DE-thorsten-medium"
 
 
 @lru_cache

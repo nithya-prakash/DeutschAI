@@ -7,3 +7,5 @@ venv/
 .ruff_cache/
 *.egg-info/
 .fastembed_cache/
+.whisper_cache/
+.piper_cache/

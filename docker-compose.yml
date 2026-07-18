@@ -41,7 +41,7 @@ services:
       - qdrant_data:/qdrant/storage
     networks: [deutschai]
 
-  # Object storage — not yet used by the app; wired up starting Phase 4 (speech audio, documents).
+  # Object storage — backs Phase 4 speech audio blobs (user recordings + TTS replies).
   minio:
     image: minio/minio:RELEASE.2024-08-29T01-40-52Z
     command: server /data --console-address ":9001"
@@ -86,6 +86,9 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-deutschai}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-deutschai123}
+      MINIO_BUCKET: ${MINIO_BUCKET:-deutschai-media}
+      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-base}
+      PIPER_VOICE: ${PIPER_VOICE:-de_DE-thorsten-medium}
     ports:
       - "8000:8000"
     volumes:

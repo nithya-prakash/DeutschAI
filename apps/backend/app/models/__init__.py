@@ -9,6 +9,7 @@ from app.models.conversation import Conversation, ConversationMessage
 from app.models.grammar_topic import GrammarTopic
 from app.models.quiz_attempt import QuizAttempt
 from app.models.quiz_question import QuizQuestion
+from app.models.speech_conversation import SpeechConversation, SpeechTurn
 from app.models.study_session import StudySession
 from app.models.user import User
 from app.models.user_topic_progress import UserTopicProgress
@@ -26,4 +27,6 @@ __all__ = [
     "QuizAttempt",
     "Conversation",
     "ConversationMessage",
+    "SpeechConversation",
+    "SpeechTurn",
 ]

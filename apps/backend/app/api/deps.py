@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.security import TokenType, decode_token
 from app.infrastructure.database.session import get_db
+from app.infrastructure.object_store.minio_client import ObjectStore, get_object_store
 from app.infrastructure.redis.client import get_redis_client
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
@@ -45,3 +46,7 @@ async def get_current_user(
 
 def get_redis() -> redis.Redis:
     return get_redis_client()
+
+
+def get_object_storage() -> ObjectStore:
+    return get_object_store()

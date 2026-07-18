@@ -4,14 +4,14 @@ An AI-powered, adaptive platform for learning German from A1 to C1 — architect
 additional languages (Spanish, French, Japanese, …) can be added later without
 reworking the core.
 
-**Status: Phase 3 of 6.** This repo currently ships a real, working slice — auth,
+**Status: Phase 4 of 6.** This repo currently ships a real, working slice — auth,
 user profiles, a study-streak dashboard, vocabulary spaced repetition, a
-curriculum roadmap, a LangGraph daily planner, and a RAG-grounded AI Tutor —
-built on the clean-architecture foundation the rest of the system (speech,
-recommendations, ML, observability) will be layered onto. See
-[`docs/ROADMAP.md`](docs/ROADMAP.md) for what's built vs. planned, and don't
-take marketing copy about "AI agents" at face value until it shows up in that
-roadmap as shipped.
+curriculum roadmap, a LangGraph daily planner, a RAG-grounded AI Tutor, and a
+local speech engine with turn-taking Conversation Mode — built on the
+clean-architecture foundation the rest of the system (recommendations, ML,
+observability) will be layered onto. See [`docs/ROADMAP.md`](docs/ROADMAP.md)
+for what's built vs. planned, and don't take marketing copy about "AI agents"
+at face value until it shows up in that roadmap as shipped.
 
 ## What's actually working right now
 
@@ -37,10 +37,16 @@ roadmap as shipped.
 - **Practice quiz** (`/quiz`) — 16 seeded multiple-choice questions, graded
   deterministically (no LLM). A wrong answer is recorded by the Memory Agent
   and shows up as a "Recent mistakes" card on the dashboard
+- **Conversation Mode** (`/conversation`) — record yourself speaking German,
+  get a real transcript (`faster-whisper`, local, no API key), a real
+  Claude-generated reply from a LangGraph Conversation Agent scoring your
+  grammar/vocabulary, and a real synthesized spoken reply (Piper, local, no
+  API key) — pronunciation/fluency scoring has no real signal yet, so it's
+  shown as explicitly "locked" rather than faked
 - Dark mode
 - The full local dev stack (Postgres, Redis, Qdrant, MinIO, backend, frontend,
-  nginx) via one `docker compose up` — MinIO is still provisioned but idle,
-  waiting on Phase 4 (speech audio storage)
+  nginx) via one `docker compose up` — MinIO now actually stores the
+  recorded/synthesized audio blobs from Conversation Mode
 
 Metrics that depend on later phases (skill scores, ML forecasts, aggregated
 topic rankings) are shown in the dashboard as explicitly "locked," not faked

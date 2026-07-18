@@ -37,14 +37,18 @@ interface RequestOptions extends RequestInit {
   auth?: boolean;
 }
 
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function fetchWithAuth(path: string, options: RequestOptions = {}): Promise<Response> {
   const { auth = true, headers, ...rest } = options;
+
+  // FormData (multipart uploads) must let the browser set its own
+  // Content-Type with the multipart boundary — never force JSON on it.
+  const isFormData = rest.body instanceof FormData;
 
   const doFetch = async (token: string | null): Promise<Response> =>
     fetch(`${API_BASE_URL}${path}`, {
       ...rest,
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...headers,
       },
@@ -71,8 +75,20 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
     throw new ApiRequestError(response.status, detail);
   }
 
+  return response;
+}
+
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await fetchWithAuth(path, options);
   if (response.status === 204) {
     return undefined as T;
   }
   return response.json() as Promise<T>;
+}
+
+/** For binary responses (e.g. Conversation Mode's synthesized audio playback)
+ * that need the same bearer-auth/401-refresh handling as `apiFetch`. */
+export async function apiFetchBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+  const response = await fetchWithAuth(path, options);
+  return response.blob();
 }

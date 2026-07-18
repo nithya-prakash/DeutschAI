@@ -162,3 +162,38 @@ export interface MemoryRead {
   related_topic_name: string | null;
   created_at: string;
 }
+
+// --- Phase 4: Conversation Mode (speech) ---
+// Grammar/vocabulary scores are real (Claude-scored). Pronunciation/fluency
+// have no real signal yet, so they're never sent by the API at all — the
+// frontend renders them as locked via the same `LockedInsights` component
+// the dashboard uses, rather than the API faking a number.
+
+export interface SpeechTurnRead {
+  id: string;
+  role: MessageRole;
+  text: string;
+  grammar_score: number | null;
+  vocabulary_score: number | null;
+  feedback: string | null;
+  created_at: string;
+}
+
+export interface SpeechConversationSummary {
+  id: string;
+  created_at: string;
+  turn_count: number;
+  last_turn_preview: string | null;
+}
+
+export interface SpeechConversationRead {
+  id: string;
+  created_at: string;
+  turns: SpeechTurnRead[];
+}
+
+export interface SubmitTurnResponse {
+  conversation_id: string;
+  user_turn: SpeechTurnRead;
+  assistant_turn: SpeechTurnRead;
+}

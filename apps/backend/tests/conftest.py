@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import (  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 from sqlalchemy.pool import StaticPool  # noqa: E402
 
-from app.api.deps import get_redis  # noqa: E402
+from app.api.deps import get_object_storage, get_redis  # noqa: E402
 from app.domain.curriculum_reference import EVERYDAY_TOPICS, GRAMMAR_TOPICS  # noqa: E402
 from app.domain.quiz_reference import QUIZ_QUESTIONS  # noqa: E402
 from app.infrastructure.database.session import get_db  # noqa: E402
@@ -116,6 +116,27 @@ def _fake_redis() -> FakeRedis:
     the next test."""
     instance = FakeRedis()
     app.dependency_overrides[get_redis] = lambda: instance
+    return instance
+
+
+class FakeObjectStore:
+    """In-memory stand-in for `ObjectStore` — the speech endpoints exercise
+    real upload/download logic without a real MinIO."""
+
+    def __init__(self) -> None:
+        self._store: dict[str, bytes] = {}
+
+    def put_object(self, key: str, data: bytes, content_type: str) -> None:
+        self._store[key] = data
+
+    def get_object(self, key: str) -> bytes:
+        return self._store[key]
+
+
+@pytest.fixture(autouse=True)
+def _fake_object_store() -> FakeObjectStore:
+    instance = FakeObjectStore()
+    app.dependency_overrides[get_object_storage] = lambda: instance
     return instance
 
 

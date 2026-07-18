@@ -1,4 +1,4 @@
-# Architecture (Phase 3)
+# Architecture (Phase 4)
 
 ## Why clean architecture, here
 
@@ -273,10 +273,48 @@ actual async job to run.
   the bearer token and transparently retries once via the refresh endpoint on
   a 401, rather than every call site handling token refresh itself.
 
+## Speech engine + Conversation Mode (Phase 4)
+
+Both STT and TTS run locally — no API key, no per-request cost, same
+philosophy as the RAG pipeline's `fastembed` choice:
+
+- **STT** (`app/ai/speech/stt.py`): `faster-whisper` (CTranslate2, no torch).
+  `transcribe(model, audio_bytes)` takes the model as a parameter — same
+  DI-for-testability shape as `tutor_agent.build_tutor_graph` — so tests
+  inject a fake model instead of loading real weights.
+- **TTS** (`app/ai/speech/tts.py`): Piper, but via its official prebuilt CLI
+  binary rather than the `piper-tts` Python package — that package's native
+  `piper-phonemize` dependency publishes no Linux ARM64 wheel, which this
+  backend's Docker image needs on Apple Silicon. The binary and the
+  `de_DE-thorsten-medium` voice model are downloaded once and cached
+  locally (`.whisper_cache/`, `.piper_cache/`), mirroring fastembed's
+  download-once-then-cache pattern.
+- **Object storage**: `app/infrastructure/object_store/minio_client.py`
+  wraps MinIO (finally in use — provisioned since Phase 1, idle until now)
+  for both the learner's uploaded recordings and the synthesized replies.
+  Playback is proxied through `GET /speech/turns/{id}/audio`
+  (ownership-checked, same JWT dependency as everything else) rather than a
+  public presigned URL, so auth stays centralized.
+- **Conversation Agent** (`app/ai/conversation_agent.py`): a 2-node
+  LangGraph graph (`generate -> parse`) reusing `tutor_agent.get_chat_model`
+  rather than a second Anthropic client factory. One Claude call per turn
+  does double duty — continues the dialogue in German at the learner's CEFR
+  level, and scores the grammar/vocabulary of what they just said, returned
+  as JSON. If Claude's output doesn't parse, the `parse` node falls back to
+  the raw text as the reply with scores left `None` — an honest gap, not a
+  fabricated number.
+- **Pronunciation/fluency are not scored at all**: Claude has no audio
+  input, so there's no real signal for either. The API never sends these
+  fields; the frontend renders them as locked (`LockedInsights`, same
+  component the dashboard uses) rather than inventing something plausible.
+- `speech_conversations`/`speech_turns` are separate tables from
+  `conversations`/`conversation_messages` (the Tutor Agent's text threads):
+  different content shape (audio blobs, scores) and a different agent.
+
 ## What's deliberately not built yet
 
-Whisper STT/TTS, the recommendation engine, the ML forgetting-curve/habit
-models, and the Motivation Agent are **not** stubbed with fake logic —
-they're absent, and the dashboard says so via `locked_insights` rather than
-fabricating numbers. Building a hollow interface for them now would cost real
-effort and communicate false progress; see `ROADMAP.md` for when each lands.
+The recommendation engine, the ML forgetting-curve/habit models, and the
+Motivation Agent are **not** stubbed with fake logic — they're absent, and
+the dashboard says so via `locked_insights` rather than fabricating numbers.
+Building a hollow interface for them now would cost real effort and
+communicate false progress; see `ROADMAP.md` for when each lands.

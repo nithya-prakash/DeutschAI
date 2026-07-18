@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     memory,
     planner,
     quizzes,
+    speech,
     topics,
     tutor,
     users,
@@ -25,3 +26,4 @@ api_router.include_router(planner.router)
 api_router.include_router(tutor.router)
 api_router.include_router(memory.router)
 api_router.include_router(quizzes.router)
+api_router.include_router(speech.router)
