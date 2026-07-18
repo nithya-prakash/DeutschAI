@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 98%;
+    --foreground: 0 0% 4%;
+    --card: 40 20% 99%;
+    --card-foreground: 0 0% 4%;
+    --primary: 213 68% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 5% 94%;
+    --secondary-foreground: 0 0% 4%;
+    --muted: 60 5% 94%;
+    --muted-foreground: 40 3% 46%;
+    --accent: 213 68% 51%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 2 63% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 10% 88%;
+    --input: 40 10% 88%;
+    --ring: 213 68% 51%;
+    --radius: 0.75rem;
+
+    --heat-0: 40 8% 90%;
+    --heat-1: 213 74% 87%;
+    --heat-2: 213 74% 73%;
+    --heat-3: 213 68% 51%;
+    --heat-4: 213 74% 40%;
+    --heat-5: 213 80% 24%;
+
+    /* Fixed categorical order for planner/activity types — never cycled. */
+    --activity-vocab: 213 68% 51%;
+    --activity-grammar: 160 70% 36%;
+    --activity-listening: 38 92% 46%;
+    --activity-speaking: 260 45% 48%;
+  }
+
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+    --card: 60 2% 10%;
+    --card-foreground: 0 0% 100%;
+    --primary: 213 74% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 2% 14%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 60 2% 14%;
+    --muted-foreground: 40 3% 60%;
+    --accent: 213 74% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 2 70% 65%;
+    --destructive-foreground: 0 0% 5%;
+    --border: 60 2% 18%;
+    --input: 60 2% 18%;
+    --ring: 213 74% 60%;
+
+    --heat-0: 60 2% 16%;
+    --heat-1: 213 55% 24%;
+    --heat-2: 213 60% 34%;
+    --heat-3: 213 68% 51%;
+    --heat-4: 213 74% 60%;
+    --heat-5: 213 85% 78%;
+
+    --activity-vocab: 213 74% 60%;
+    --activity-grammar: 160 55% 48%;
+    --activity-listening: 38 88% 58%;
+    --activity-speaking: 260 60% 68%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
