@@ -59,3 +59,19 @@ class SpeechConversationRepository(BaseRepository[SpeechConversation]):
             .where(SpeechTurn.id == turn_id, SpeechConversation.user_id == user_id)
         )
         return result.scalar_one_or_none()
+
+    async def list_scored_user_turns(self, user_id: uuid.UUID) -> list[SpeechTurn]:
+        """Every USER turn (across all of this user's conversations) that
+        the Conversation Agent scored — the raw signal behind the speaking
+        skill score. Assistant turns and unparseable-response turns (scores
+        left null, see conversation_agent.py) are excluded, not zero-filled."""
+        result = await self.session.execute(
+            select(SpeechTurn)
+            .join(SpeechConversation, SpeechTurn.speech_conversation_id == SpeechConversation.id)
+            .where(
+                SpeechConversation.user_id == user_id,
+                SpeechTurn.role == MessageRole.USER,
+                SpeechTurn.grammar_score.is_not(None),
+            )
+        )
+        return list(result.scalars().all())

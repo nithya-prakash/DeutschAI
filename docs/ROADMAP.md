@@ -108,19 +108,46 @@ Core authentication, user profile, database layer, Docker setup.
       model/voice objects, turn persistence/ownership/503 endpoint tests
       with a fake in-memory object store)
 
-## Phase 5 — Recommendation Engine, ML, Analytics
+## Phase 5 — Recommendation Engine, ML, Analytics — Done ✅
 
-- [ ] Content recommendation (grammar/vocab/podcasts/articles) ranked by
-      interests + CEFR level + mistake history
-- [ ] Habit Intelligence: best study time, skip patterns, consistency score —
-      a real behavioral model, not a hardcoded threshold
-- [ ] Lightweight traditional-ML components (explicitly *not* LLM calls):
-      vocabulary forgetting-probability model, session-skip prediction,
-      recommendation ranking, progress forecasting
-- [ ] Motivation Agent: streak-recovery messaging, adaptive workload reduction
-      after a skip — never a guilt-trip, always "reduce and re-invite"
-- [ ] Full analytics dashboard (skill scores, weakest/strongest topics,
-      predicted milestone) replacing today's `locked_insights` placeholders
+- [x] Content recommendation (`GET /recommendations`): internal content only
+      (grammar topics + due vocabulary), ranked by real per-user data
+      (forgetting-curve retention, mistake history). Podcasts/articles are
+      explicitly out of scope — there's no real external content source
+      wired up anywhere in the app, and nothing is fabricated to fill that
+      gap (no invented titles/URLs)
+- [x] Habit Intelligence (`app/ai/ml/habit_model.py`): a real recency-weighted
+      consistency score, day-of-week skip-probability blend, and best-study-
+      day detection — computed from actual `StudySession` history, not a
+      hardcoded "N skips = at risk" threshold. (Best study *day*, not hour —
+      `studied_on` has no reliable per-user timezone behind it, so an hour
+      would risk being actively misleading rather than merely imprecise)
+- [x] Lightweight traditional-ML components (no LLM calls): a forgetting-curve
+      retention model (`app/ai/ml/forgetting_curve.py`, Ebbinghaus-style decay
+      over each word's existing SM-2 state — no new review-history table
+      needed), a Recommendation Agent (`app/ai/recommendation_agent.py`, a
+      deterministic LangGraph graph mirroring the Planner Agent's shape), and
+      a progress forecast (`app/ai/ml/forecasting.py`, a hand-rolled
+      least-squares trend on topic-mastery history)
+- [x] Motivation Agent (`app/services/motivation_service.py`): deterministic
+      streak-recovery message templates bucketed by days-since-last-session
+      — always "reduce and re-invite" (a smaller suggested-minutes figure,
+      never guilt-tripping language), no LLM/API key needed
+- [x] Full analytics dashboard: real grammar/vocabulary/speaking skill scores,
+      weakest/strongest topic rankings, a predicted milestone, and habit
+      figures now populate `DashboardSummary` (`AnalyticsService`).
+      `locked_insights` shrank to just what's genuinely still missing
+      platform-wide: listening/reading/writing scores (no exercise in the
+      app tests any of those three yet). Every new field is `None`/empty
+      exactly where a user has no data yet for it — never a fabricated
+      number
+- [x] No new DB tables or migration — every Phase 5 metric is computed from
+      data Phases 1-4 already collect
+- [x] 105 passing pytest tests (30 new: pure-function ML unit tests
+      including "insufficient data returns `None`" edge cases, Recommendation
+      Agent graph tests, and dashboard/recommendations endpoint tests seeded
+      with real quiz/vocab/speech/study-session history via the actual
+      endpoints plus a `db_session` fixture for back-dated timestamps)
 
 ## Phase 6 — Monitoring, CI/CD, Production Hardening
 

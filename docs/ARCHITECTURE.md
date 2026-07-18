@@ -1,4 +1,4 @@
-# Architecture (Phase 4)
+# Architecture (Phase 5)
 
 ## Why clean architecture, here
 
@@ -249,9 +249,10 @@ Grading a multiple-choice answer is index comparison, so
 brief's own instruction not to reach for one where traditional logic
 suffices. A wrong answer is written to `ai_memories` via `MemoryService`,
 tied to the question's topic; the "Recent mistakes" dashboard card reads
-that back. Deeper use of these memories — e.g. feeding the Planner Agent's
-weak-topic weighting — is a natural Phase 5 extension, not built yet (there's
-no usage data yet to tune it against).
+that back. Phase 5's `AnalyticsService` and `RecommendationService` are the
+deeper use of these memories this docstring used to describe as a future
+extension — weakest/strongest topic ranking and recommended-topic focus
+both read `ai_memories` counts directly (see below).
 
 ## Auth
 
@@ -311,10 +312,67 @@ philosophy as the RAG pipeline's `fastembed` choice:
   `conversations`/`conversation_messages` (the Tutor Agent's text threads):
   different content shape (audio blobs, scores) and a different agent.
 
+## Recommendation Engine, ML, Analytics (Phase 5)
+
+Everything here is computed from data Phases 1-4 already collect — **no new
+DB tables, no migration**. `app/ai/ml/` holds the pure-function models (no
+DB, no LLM, unit-testable in isolation):
+
+- **Forgetting curve** (`forgetting_curve.py`): Ebbinghaus-style exponential
+  decay (`R = e^(-t/S)`) over a vocab item's *existing* SM-2 state (ease
+  factor, interval, days since last review) — no dedicated review-history
+  table needed, since that state already encodes how well-learned a word is.
+  `days_since()` normalizes a DB-sourced timestamp before subtracting from
+  "now": SQLite (the test suite's engine) hands back naive datetimes even
+  for `DateTime(timezone=True)` columns, while Postgres preserves tzinfo —
+  a naive value is treated as UTC rather than left to raise.
+- **Habit Intelligence** (`habit_model.py`): a recency-weighted consistency
+  score, a day-of-week/recent-trend blend for skip probability, and a
+  best-study-*day* detector — real weighted statistics from `StudySession`
+  history, not a hardcoded "N skips = at risk" threshold. Best study *day*
+  rather than *hour*: `studied_on` has no reliable per-user timezone behind
+  it (no timezone field on `User`), so reporting an hour would risk being
+  actively misleading, not just imprecise.
+- **Forecasting** (`forecasting.py`): a hand-rolled least-squares trend on
+  cumulative topics-mastered-over-time, extrapolated to a projected
+  completion date — deliberately not a heavier model; with only a handful
+  of mastery-date points per user, anything fancier would be overfitting
+  noise. Returns `None` on fewer than 2 distinct dates, a flat/negative
+  trend, or an already-complete curriculum.
+- **Recommendation Agent** (`app/ai/recommendation_agent.py`): a 3-node
+  LangGraph graph (`assess -> rank -> render`), the same shape as
+  `planner_agent.py` and for the same reason — ranking pre-fetched
+  candidates by a real, precomputed score doesn't need generation, so every
+  node is deterministic. `RecommendationService` builds candidates from
+  reviewed vocab (retention-scored) and non-mastered topics with recorded
+  mistakes; **podcasts/articles are out of scope** — there's no real
+  external content source wired up anywhere in the app, and inventing
+  external URLs isn't something this build does.
+- **Motivation Agent** (`app/services/motivation_service.py`): deterministic
+  message templates bucketed by days-since-last-session, not an LLM call —
+  the message space is small and bounded, so a rule picks a canned,
+  non-guilt-tripping message. Always "reduce and re-invite": every message
+  pairs encouragement with a *smaller* suggested-minutes figure, shown as a
+  suggestion the learner can still override in the Planner, not something
+  that silently mutates `PlannerService`'s output.
+- **`AnalyticsService`** composes all of the above into `DashboardSummary`'s
+  new fields (skill scores, topic rankings, forecast, consistency, at-risk
+  vocab count); `DashboardService.get_summary` also calls
+  `MotivationService` and is the single place `/dashboard/summary` reads
+  from. It fetches `StudySession` history once over a wide window (365
+  days, `DATA_FETCH_DAYS`) rather than the display-only 12-week window, so
+  the Motivation Agent sees the learner's *actual* last session — a bug
+  caught during this phase's own verification: a learner who last studied
+  four months ago was incorrectly getting no motivation message at all
+  because their last session fell outside a too-narrow fetch window.
+- `LOCKED_INSIGHTS` shrank to just what's genuinely still missing
+  platform-wide: listening/reading/writing scores (no exercise anywhere in
+  the app tests any of those three yet). Grammar/vocabulary/speaking moved
+  out of the locked list since Phase 5 made them real.
+
 ## What's deliberately not built yet
 
-The recommendation engine, the ML forgetting-curve/habit models, and the
-Motivation Agent are **not** stubbed with fake logic — they're absent, and
-the dashboard says so via `locked_insights` rather than fabricating numbers.
-Building a hollow interface for them now would cost real effort and
-communicate false progress; see `ROADMAP.md` for when each lands.
+Podcast/article recommendations, a background job queue (rq/arq), and
+everything in `ROADMAP.md`'s Phase 6 (monitoring, CI/CD, admin panel,
+production deployment) are **not** stubbed with fake logic — they're
+absent, not filled with placeholder numbers or invented content.

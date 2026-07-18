@@ -1,8 +1,10 @@
 """Dashboard summary computation.
 
-Streak and weekly-minutes logic lives here rather than in the repository
-(pure data access) or the API layer (transport only) — it's business logic
-the Habit/Analytics engines will extend in later phases.
+Streak and weekly-minutes logic lives here; Phase 5's skill scores, topic
+rankings, forecast, and habit-intelligence figures come from
+`AnalyticsService`, and the motivation banner from `MotivationService` —
+composed together into one `DashboardSummary` here, the single place the
+`/dashboard/summary` endpoint reads from.
 """
 import uuid
 from dataclasses import dataclass
@@ -10,24 +12,34 @@ from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.schemas.dashboard import DailyMinutes, DashboardSummary
+from app.domain.schemas.dashboard import (
+    DailyMinutes,
+    DashboardSummary,
+    MotivationMessage,
+)
 from app.repositories.study_session_repository import StudySessionRepository
 from app.repositories.user_repository import UserRepository
+from app.services.analytics_service import AnalyticsService
+from app.services.motivation_service import get_motivation_message
 
-WEEKS_OF_HISTORY = 12
+WEEKS_OF_HISTORY = 12  # how far back the heatmap/weekly-minutes display goes
+# How far back the underlying StudySession query goes — wider than the
+# display window above so streak-longest-ever, habit intelligence, and the
+# motivation message (which needs the learner's *actual* last session, not
+# just one within the last 12 weeks) all see real history instead of an
+# artificially truncated slice.
+DATA_FETCH_DAYS = 365
 
-# Metrics the platform will compute starting later phases. Kept explicit here
-# (rather than silently omitted) so the frontend can render honest
-# "coming soon" placeholders instead of fabricated numbers.
-# NOTE: vocabulary/grammar tracking shipped in Phase 2 (see /vocabulary and
-# /curriculum); raw mistake tracking shipped in Phase 3 (see the "Recent
-# mistakes" card, backed by the Memory Agent) — both removed from this list
-# accordingly rather than left stale. What's still missing is the *aggregate*
-# analysis on top of that raw data.
+# What's still genuinely missing platform-wide, kept explicit (rather than
+# silently omitted) so the frontend renders an honest "coming soon" instead
+# of a fabricated number. Grammar/vocabulary/speaking scores, topic
+# rankings, forecasting, and habit intelligence all shipped in Phase 5 —
+# removed from this list accordingly rather than left stale. Listening/
+# reading/writing have no real signal anywhere in the app yet.
 LOCKED_INSIGHTS = [
-    "Speaking / Listening / Reading / Writing scores (Phase 4/5)",
-    "Predicted next milestone (Phase 5 — ML forecasting)",
-    "Aggregated weakest/strongest topic ranking (Phase 5 — Analytics Engine)",
+    "Listening comprehension score",
+    "Reading comprehension score",
+    "Writing score",
 ]
 
 
@@ -43,7 +55,7 @@ class DashboardService:
         if user is None:
             raise ValueError(f"user {user_id} not found")
 
-        since = datetime.now(UTC) - timedelta(weeks=WEEKS_OF_HISTORY)
+        since = datetime.now(UTC) - timedelta(days=DATA_FETCH_DAYS)
         sessions = await session_repo.list_for_user_since(user_id, since)
 
         minutes_by_day: dict[date, int] = {}
@@ -55,9 +67,10 @@ class DashboardService:
         current_streak = self._current_streak(minutes_by_day, today)
         longest_streak = self._longest_streak(minutes_by_day, today)
 
-        total_minutes = sum(minutes_by_day.values())
         week_start = today - timedelta(days=6)
         weekly_minutes = sum(m for d, m in minutes_by_day.items() if d >= week_start)
+        display_window_start = today - timedelta(weeks=WEEKS_OF_HISTORY)
+        total_minutes = sum(m for d, m in minutes_by_day.items() if d >= display_window_start)
 
         last_12_weeks = [
             DailyMinutes(date=today - timedelta(days=offset), minutes=minutes_by_day.get(
@@ -65,6 +78,10 @@ class DashboardService:
             ))
             for offset in range(WEEKS_OF_HISTORY * 7 - 1, -1, -1)
         ]
+
+        session_tuples = [(s.studied_on, s.duration_minutes) for s in sessions]
+        analytics = await AnalyticsService(self.session).get_analytics(user_id, session_tuples)
+        motivation = get_motivation_message(session_tuples, today)
 
         return DashboardSummary(
             cefr_level=user.cefr_level,
@@ -74,6 +91,22 @@ class DashboardService:
             total_study_minutes=total_minutes,
             weekly_study_minutes=weekly_minutes,
             last_12_weeks=last_12_weeks,
+            skill_scores=analytics.skill_scores,
+            weakest_topics=analytics.weakest_topics,
+            strongest_topics=analytics.strongest_topics,
+            predicted_milestone=analytics.predicted_milestone,
+            consistency_score=analytics.consistency_score,
+            best_study_day=analytics.best_study_day,
+            vocab_at_risk_count=analytics.vocab_at_risk_count,
+            motivation_message=(
+                MotivationMessage(
+                    headline=motivation.headline,
+                    body=motivation.body,
+                    suggested_minutes=motivation.suggested_minutes,
+                )
+                if motivation
+                else None
+            ),
             locked_insights=LOCKED_INSIGHTS,
         )
 

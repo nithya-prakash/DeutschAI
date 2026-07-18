@@ -147,6 +147,15 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
         yield ac
 
 
+@pytest_asyncio.fixture
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Direct access to the same test database the API uses, for seeding
+    state (e.g. back-dated timestamps) that isn't reachable by driving the
+    real endpoints alone."""
+    async with TestSessionLocal() as session:
+        yield session
+
+
 @pytest.fixture
 def user_payload() -> dict:
     return {

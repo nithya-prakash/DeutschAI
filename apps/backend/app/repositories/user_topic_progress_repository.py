@@ -18,6 +18,15 @@ class UserTopicProgressRepository(BaseRepository[UserTopicProgress]):
         )
         return {row.topic_id: row.status for row in result.scalars().all()}
 
+    async def list_for_user(self, user_id: uuid.UUID) -> list[UserTopicProgress]:
+        """Full rows (status + `updated_at`) rather than just the status
+        map — `updated_at` on MASTERED rows is the raw signal behind
+        progress forecasting."""
+        result = await self.session.execute(
+            select(UserTopicProgress).where(UserTopicProgress.user_id == user_id)
+        )
+        return list(result.scalars().all())
+
     async def get_by_user_and_topic(
         self, user_id: uuid.UUID, topic_id: uuid.UUID
     ) -> UserTopicProgress | None:

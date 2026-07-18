@@ -4,14 +4,15 @@ An AI-powered, adaptive platform for learning German from A1 to C1 — architect
 additional languages (Spanish, French, Japanese, …) can be added later without
 reworking the core.
 
-**Status: Phase 4 of 6.** This repo currently ships a real, working slice — auth,
+**Status: Phase 5 of 6.** This repo currently ships a real, working slice — auth,
 user profiles, a study-streak dashboard, vocabulary spaced repetition, a
-curriculum roadmap, a LangGraph daily planner, a RAG-grounded AI Tutor, and a
-local speech engine with turn-taking Conversation Mode — built on the
-clean-architecture foundation the rest of the system (recommendations, ML,
-observability) will be layered onto. See [`docs/ROADMAP.md`](docs/ROADMAP.md)
-for what's built vs. planned, and don't take marketing copy about "AI agents"
-at face value until it shows up in that roadmap as shipped.
+curriculum roadmap, a LangGraph daily planner, a RAG-grounded AI Tutor, a
+local speech engine with turn-taking Conversation Mode, and a recommendation/
+analytics engine — built on the clean-architecture foundation the rest of the
+system (observability, deploy) will be layered onto. See
+[`docs/ROADMAP.md`](docs/ROADMAP.md) for what's built vs. planned, and don't
+take marketing copy about "AI agents" at face value until it shows up in that
+roadmap as shipped.
 
 ## What's actually working right now
 
@@ -43,13 +44,20 @@ at face value until it shows up in that roadmap as shipped.
   grammar/vocabulary, and a real synthesized spoken reply (Piper, local, no
   API key) — pronunciation/fluency scoring has no real signal yet, so it's
   shown as explicitly "locked" rather than faked
+- **Recommendation Engine & Analytics** (on `/dashboard`) — real grammar/
+  vocabulary/speaking skill scores, weakest/strongest topic rankings, a
+  progress-forecast milestone, habit-intelligence figures (consistency
+  score, best study day), a "recommended focus" list (due vocab + weak
+  topics, internal content only — no invented podcasts/articles), and a
+  Motivation Agent banner after a study gap. Every number is computed from
+  your own real history — no new DB tables were even needed for this
 - Dark mode
 - The full local dev stack (Postgres, Redis, Qdrant, MinIO, backend, frontend,
   nginx) via one `docker compose up` — MinIO now actually stores the
   recorded/synthesized audio blobs from Conversation Mode
 
-Metrics that depend on later phases (skill scores, ML forecasts, aggregated
-topic rankings) are shown in the dashboard as explicitly "locked," not faked
+Metrics with no real signal anywhere in the app yet (listening, reading, and
+writing scores) are shown on the dashboard as explicitly "locked," not faked
 with placeholder numbers.
 
 ## Quick start

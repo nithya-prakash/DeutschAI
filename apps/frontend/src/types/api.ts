@@ -25,6 +25,34 @@ export interface DailyMinutes {
   minutes: number;
 }
 
+// --- Phase 5: Recommendation Engine, ML, Analytics ---
+// Every field below is `null`/empty exactly where the backend has no real
+// data yet for that user — never a fabricated number (see docs/ARCHITECTURE.md).
+
+export interface SkillScores {
+  grammar: number | null;
+  vocabulary: number | null;
+  speaking: number | null;
+}
+
+export interface TopicRanking {
+  topic_id: string;
+  topic_name: string;
+  mistake_count: number;
+  accuracy: number | null;
+}
+
+export interface PredictedMilestone {
+  topics_remaining: number;
+  projected_date: string;
+}
+
+export interface MotivationMessage {
+  headline: string;
+  body: string;
+  suggested_minutes: number;
+}
+
 export interface DashboardSummary {
   cefr_level: CEFRLevel;
   member_since: string;
@@ -33,6 +61,14 @@ export interface DashboardSummary {
   total_study_minutes: number;
   weekly_study_minutes: number;
   last_12_weeks: DailyMinutes[];
+  skill_scores: SkillScores;
+  weakest_topics: TopicRanking[];
+  strongest_topics: TopicRanking[];
+  predicted_milestone: PredictedMilestone | null;
+  consistency_score: number | null;
+  best_study_day: string | null;
+  vocab_at_risk_count: number;
+  motivation_message: MotivationMessage | null;
   locked_insights: string[];
 }
 
@@ -161,6 +197,27 @@ export interface MemoryRead {
   content: string;
   related_topic_name: string | null;
   created_at: string;
+}
+
+// Recommendation Engine — internal content only (grammar topics + vocabulary),
+// ranked by real data. No podcasts/articles: no real content source exists.
+export interface RecommendedVocab {
+  id: string;
+  german: string;
+  english: string;
+  retention_probability: number;
+  reason: string;
+}
+
+export interface RecommendedTopic {
+  topic_id: string;
+  topic_name: string;
+  reason: string;
+}
+
+export interface RecommendationResult {
+  vocab: RecommendedVocab[];
+  topics: RecommendedTopic[];
 }
 
 // --- Phase 4: Conversation Mode (speech) ---

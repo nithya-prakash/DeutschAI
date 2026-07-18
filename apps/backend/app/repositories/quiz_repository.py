@@ -36,3 +36,14 @@ class QuizQuestionRepository(BaseRepository[QuizQuestion]):
 class QuizAttemptRepository(BaseRepository[QuizAttempt]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, QuizAttempt)
+
+    async def list_for_user_with_topic(self, user_id: uuid.UUID) -> list[tuple[bool, uuid.UUID]]:
+        """(is_correct, topic_id) for every attempt this user has made —
+        the raw signal behind grammar skill scoring and weakest/strongest
+        topic ranking."""
+        result = await self.session.execute(
+            select(QuizAttempt.is_correct, QuizQuestion.topic_id)
+            .join(QuizQuestion, QuizAttempt.question_id == QuizQuestion.id)
+            .where(QuizAttempt.user_id == user_id)
+        )
+        return [(is_correct, topic_id) for is_correct, topic_id in result.all()]
