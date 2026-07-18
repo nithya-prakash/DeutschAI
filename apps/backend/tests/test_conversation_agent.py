@@ -25,6 +25,8 @@ def _base_state(user_utterance: str = "Ich habe gestern ins Kino gegangen."):
         "grammar_score": None,
         "vocabulary_score": None,
         "feedback": None,
+        "input_tokens": 0,
+        "output_tokens": 0,
     }
 
 
@@ -42,6 +44,10 @@ def test_conversation_graph_parses_well_formed_json():
     assert result["grammar_score"] == 70
     assert result["vocabulary_score"] == 85
     assert "bin gegangen" in result["feedback"]
+    # FakeChatModel doesn't set usage_metadata — 0 is the correct default,
+    # not a masked failure (see conversation_agent._build_generate_node).
+    assert result["input_tokens"] == 0
+    assert result["output_tokens"] == 0
 
     system_message = fake_model.last_messages[0]
     assert "A2" in system_message.content

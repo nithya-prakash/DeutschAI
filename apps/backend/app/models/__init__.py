@@ -6,7 +6,9 @@ order elsewhere in the app.
 from app.infrastructure.database.base import Base
 from app.models.ai_memory import AIMemory
 from app.models.conversation import Conversation, ConversationMessage
+from app.models.error_log_entry import ErrorLogEntry
 from app.models.grammar_topic import GrammarTopic
+from app.models.llm_usage_event import LLMUsageEvent
 from app.models.quiz_attempt import QuizAttempt
 from app.models.quiz_question import QuizQuestion
 from app.models.speech_conversation import SpeechConversation, SpeechTurn
@@ -29,4 +31,6 @@ __all__ = [
     "ConversationMessage",
     "SpeechConversation",
     "SpeechTurn",
+    "LLMUsageEvent",
+    "ErrorLogEntry",
 ]

@@ -146,6 +146,8 @@ async def test_scored_speech_turn_produces_speaking_score(client, user_payload, 
             "grammar_score": 80,
             "vocabulary_score": 90,
             "feedback": "Good start.",
+            "input_tokens": 25,
+            "output_tokens": 15,
         },
     )
     monkeypatch.setattr(

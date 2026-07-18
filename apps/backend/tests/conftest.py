@@ -132,6 +132,9 @@ class FakeObjectStore:
     def get_object(self, key: str) -> bytes:
         return self._store[key]
 
+    def is_reachable(self) -> bool:
+        return True
+
 
 @pytest.fixture(autouse=True)
 def _fake_object_store() -> FakeObjectStore:

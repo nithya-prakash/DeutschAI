@@ -35,4 +35,5 @@ class UserRead(BaseModel):
     target_language: str
     cefr_level: CEFRLevel
     is_active: bool
+    is_superuser: bool
     created_at: datetime

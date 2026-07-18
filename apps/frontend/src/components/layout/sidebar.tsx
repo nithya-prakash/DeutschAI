@@ -11,6 +11,7 @@ import {
   MessageCircleQuestion,
   Mic,
   Settings,
+  ShieldCheck,
   SquareCheckBig,
   UserRound,
 } from "lucide-react";
@@ -36,6 +37,10 @@ export function Sidebar() {
   const logout = useAuthStore((s) => s.logout);
   const user = useAuthStore((s) => s.user);
 
+  const navItems = user?.is_superuser
+    ? [...NAV_ITEMS, { href: "/admin", label: "Admin", icon: ShieldCheck }]
+    : NAV_ITEMS;
+
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-border bg-card px-4 py-6">
       <div className="mb-8 px-2">
@@ -44,7 +49,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+        {navItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}

@@ -36,6 +36,14 @@ class ObjectStore:
             response.close()
             response.release_conn()
 
+    def is_reachable(self) -> bool:
+        """Real reachability check for the admin panel's system-health view."""
+        try:
+            self._client.bucket_exists(self._bucket)
+            return True
+        except Exception:
+            return False
+
 
 @lru_cache
 def get_object_store() -> ObjectStore:

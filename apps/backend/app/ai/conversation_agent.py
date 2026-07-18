@@ -46,6 +46,8 @@ class ConversationTurnState(TypedDict):
     grammar_score: int | None
     vocabulary_score: int | None
     feedback: str | None
+    input_tokens: int
+    output_tokens: int
 
 
 def _format_history(history: list[tuple[str, str]]) -> str:
@@ -63,7 +65,16 @@ def _build_generate_node(chat_model: BaseChatModel):
             [SystemMessage(content=system_prompt), HumanMessage(content=state["user_utterance"])]
         )
         raw = response.content if isinstance(response.content, str) else str(response.content)
-        return {**state, "raw_response": raw}
+        # `usage_metadata` isn't set on the fake chat models the graph-level
+        # tests use — defaulting to 0 there is correct, not a fallback for a
+        # real-call failure.
+        usage = getattr(response, "usage_metadata", None) or {}
+        return {
+            **state,
+            "raw_response": raw,
+            "input_tokens": usage.get("input_tokens", 0),
+            "output_tokens": usage.get("output_tokens", 0),
+        }
 
     return _generate
 
@@ -129,5 +140,7 @@ def run_conversation_turn(
             "grammar_score": None,
             "vocabulary_score": None,
             "feedback": None,
+            "input_tokens": 0,
+            "output_tokens": 0,
         }
     )

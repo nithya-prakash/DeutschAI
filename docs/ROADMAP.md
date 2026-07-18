@@ -149,24 +149,59 @@ Core authentication, user profile, database layer, Docker setup.
       with real quiz/vocab/speech/study-session history via the actual
       endpoints plus a `db_session` fixture for back-dated timestamps)
 
-## Phase 6 — Monitoring, CI/CD, Production Hardening
+## Phase 6 — Monitoring, CI/CD, Production Hardening — Done ✅
 
-- [ ] GitHub Actions: lint + test + build on every push (a minimal version
-      ships in Phase 1 as `.github/workflows/ci.yml`; this phase adds deploy)
-- [ ] Prometheus + Grafana dashboards, OpenTelemetry tracing, Sentry
-- [ ] Admin panel: users, sessions, LLM token spend, system health, error logs
-- [ ] Playwright E2E suite expanded beyond the Phase-1 smoke test
-- [ ] Production deployment target (the brief doesn't specify a cloud —
-      decide this with the user before building it, since it's a real cost
-      and access-control commitment, not just code)
+- [x] GitHub Actions: a new `deploy` job builds both Docker images on every
+      push to `main` (a real, previously-missing regression check — a broken
+      Dockerfile now fails CI) but pushes nothing anywhere. No registry, no
+      secrets, no cloud account — deploying to a real target stays a
+      separate, explicit decision, not a side effect of the pipeline
+      existing
+- [x] Observability, scoped to OpenTelemetry + Sentry (Prometheus/Grafana
+      dropped for now — no real production traffic yet to make dashboards
+      meaningful): Sentry SDK init and OpenTelemetry FastAPI/SQLAlchemy
+      instrumentation are both guarded by their own optional setting
+      (`SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT`) — unset means quietly
+      absent, same pattern as `ANTHROPIC_API_KEY`. OTel is skipped entirely
+      (not a no-op exporter) when unset, since there's no point instrumenting
+      spans with nowhere real to send them
+- [x] Admin panel (`/admin`, gated on `is_superuser` — first real use of that
+      field anywhere in the codebase): real user list, real per-service
+      reachability checks (Postgres/Redis/Qdrant/MinIO) plus configured-flags
+      for the optional integrations, real session activity
+      (today/this-week/active-users, aggregated across all users), real LLM
+      token counts by agent (empty until `ANTHROPIC_API_KEY` is set and calls
+      happen — a deliberate choice over a dollar estimate, which would drift
+      from actual pricing), and a local error-log table fed by a global
+      exception handler. That last one is a scope refinement from the
+      original brief: rather than proxying Sentry's own API (a second
+      credential, mostly re-implementing Sentry's dashboard), unhandled
+      exceptions are logged locally *and* reach Sentry independently via its
+      own ASGI integration
+- [x] Playwright E2E expanded beyond the Phase-1 auth smoke test: logging a
+      session, adding/reviewing a vocab word, the Tutor's honest
+      not-configured banner (deterministic in this environment since
+      `ANTHROPIC_API_KEY` is genuinely unset), and the admin access-control
+      denial path for a regular user
+- [x] Production deployment target: deliberately not chosen this phase — the
+      user opted to wire up the automation without picking a real host, so
+      no cloud account or cost was introduced. Picking a target remains a
+      future, explicit decision
+- [x] Two new tables (`llm_usage_events`, `error_log_entries`), one migration
+      — the first new tables since Phase 4
+- [x] 116 passing pytest tests (11 new: superuser-gate/admin-service tests
+      with real + honest-empty data, and exception-handler tests confirming
+      unhandled errors log locally while existing `HTTPException`-based
+      responses like 404/503 aren't swallowed into a 500)
 
 ## Explicit non-goals for now
 
 - No fake data, mocked LLM responses, or hardcoded "AI insights" standing in
   for the agents above — the dashboard shows a metric as **locked**, never
   as a plausible-looking number that isn't real.
-- No admin panel until there's something real to administer (Phase 6).
+- No production deployment target chosen yet — Phase 6 built the CI/CD
+  automation and left picking a real host as a separate, explicit decision.
 - Multi-language support beyond German is an architectural constraint on
   every phase (`target_language` on `User`, no hardcoded "German" in any
   service/repository), not a separate phase — there's nothing to "add later"
-  if Phase 1–5 don't hardcode the language.
+  since no phase hardcoded the language.

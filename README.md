@@ -4,15 +4,16 @@ An AI-powered, adaptive platform for learning German from A1 to C1 — architect
 additional languages (Spanish, French, Japanese, …) can be added later without
 reworking the core.
 
-**Status: Phase 5 of 6.** This repo currently ships a real, working slice — auth,
-user profiles, a study-streak dashboard, vocabulary spaced repetition, a
-curriculum roadmap, a LangGraph daily planner, a RAG-grounded AI Tutor, a
-local speech engine with turn-taking Conversation Mode, and a recommendation/
-analytics engine — built on the clean-architecture foundation the rest of the
-system (observability, deploy) will be layered onto. See
-[`docs/ROADMAP.md`](docs/ROADMAP.md) for what's built vs. planned, and don't
-take marketing copy about "AI agents" at face value until it shows up in that
-roadmap as shipped.
+**Status: Phase 6 of 6 — all phases shipped.** This repo ships a real, working
+platform — auth, user profiles, a study-streak dashboard, vocabulary spaced
+repetition, a curriculum roadmap, a LangGraph daily planner, a RAG-grounded
+AI Tutor, a local speech engine with turn-taking Conversation Mode, a
+recommendation/analytics engine, and monitoring/CI/CD/an admin panel. See
+[`docs/ROADMAP.md`](docs/ROADMAP.md) for exactly what each phase delivered
+(including the deliberate scope trims — no chosen production deployment
+target, no Prometheus/Grafana, no podcast/article recommendations), and
+don't take marketing copy about "AI agents" at face value until it shows up
+in that roadmap as shipped.
 
 ## What's actually working right now
 
@@ -51,6 +52,16 @@ roadmap as shipped.
   topics, internal content only — no invented podcasts/articles), and a
   Motivation Agent banner after a study gap. Every number is computed from
   your own real history — no new DB tables were even needed for this
+- **Admin panel** (`/admin`, superuser-only) — a real user list, real
+  per-service reachability checks (Postgres/Redis/Qdrant/MinIO), real
+  session activity across all users, real LLM token counts by agent (empty
+  until `ANTHROPIC_API_KEY` is set and calls happen), and a local error log
+  fed by a global exception handler. Sentry and OpenTelemetry are wired up
+  too, each activating only once its own setting (`SENTRY_DSN`,
+  `OTEL_EXPORTER_OTLP_ENDPOINT`) is configured
+- CI now builds both Docker images on every push to `main` as a deploy-
+  readiness check — it doesn't push anywhere yet; picking a real hosting
+  target is a deliberately separate decision
 - Dark mode
 - The full local dev stack (Postgres, Redis, Qdrant, MinIO, backend, frontend,
   nginx) via one `docker compose up` — MinIO now actually stores the
@@ -90,7 +101,8 @@ deutschai/
 ├── docs/
 │   ├── ARCHITECTURE.md    Clean-architecture layering, DB schema, request flow
 │   └── ROADMAP.md          Phase-by-phase plan mapped to the full product vision
-├── .github/workflows/     CI (lint + test on every push)
+├── .github/workflows/     CI (lint + test + build on every push; a deploy
+│                          job builds both Docker images but pushes nowhere)
 └── docker-compose.yml
 ```
 

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.tutor_agent import ask_tutor
+from app.core.config import get_settings
 from app.domain.schemas.tutor import (
     AskTutorRequest,
     ConversationRead,
@@ -13,8 +14,12 @@ from app.domain.schemas.tutor import (
     TutorAnswer,
 )
 from app.models.conversation import Conversation, MessageRole
+from app.models.llm_usage_event import LLMUsageEvent
 from app.models.user import User
 from app.repositories.conversation_repository import ConversationRepository
+from app.repositories.llm_usage_repository import LLMUsageRepository
+
+settings = get_settings()
 
 
 class ConversationNotFoundError(Exception):
@@ -43,6 +48,15 @@ class TutorService:
         result = ask_tutor(payload.question, cefr_level=user.cefr_level.value)
 
         await repo.add_message(conversation.id, MessageRole.ASSISTANT, result["answer"])
+        await LLMUsageRepository(self.session).create(
+            LLMUsageEvent(
+                user_id=user.id,
+                agent_name="tutor",
+                model=settings.ANTHROPIC_MODEL,
+                input_tokens=result["input_tokens"],
+                output_tokens=result["output_tokens"],
+            )
+        )
         await self.session.commit()
 
         sources = sorted({chunk.topic_name for chunk in result["context_chunks"]})

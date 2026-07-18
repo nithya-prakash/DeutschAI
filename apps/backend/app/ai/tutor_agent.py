@@ -52,6 +52,8 @@ class TutorState(TypedDict):
     cefr_level: str
     context_chunks: list[RetrievedChunk]
     answer: str
+    input_tokens: int
+    output_tokens: int
 
 
 @lru_cache
@@ -82,7 +84,16 @@ def _build_generate_node(chat_model: BaseChatModel):
             [SystemMessage(content=system_prompt), HumanMessage(content=state["question"])]
         )
         answer = response.content if isinstance(response.content, str) else str(response.content)
-        return {**state, "answer": answer}
+        # `usage_metadata` isn't set on the fake chat models the graph-level
+        # tests use — defaulting to 0 there is correct, not a fallback for a
+        # real-call failure.
+        usage = getattr(response, "usage_metadata", None) or {}
+        return {
+            **state,
+            "answer": answer,
+            "input_tokens": usage.get("input_tokens", 0),
+            "output_tokens": usage.get("output_tokens", 0),
+        }
 
     return _generate
 
@@ -108,5 +119,12 @@ def ask_tutor(question: str, cefr_level: str) -> TutorState:
     Raises LLMNotConfiguredError if ANTHROPIC_API_KEY isn't set."""
     graph = build_tutor_graph(get_chat_model())
     return graph.invoke(
-        {"question": question, "cefr_level": cefr_level, "context_chunks": [], "answer": ""}
+        {
+            "question": question,
+            "cefr_level": cefr_level,
+            "context_chunks": [],
+            "answer": "",
+            "input_tokens": 0,
+            "output_tokens": 0,
+        }
     )

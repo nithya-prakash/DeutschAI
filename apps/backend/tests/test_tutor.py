@@ -112,6 +112,8 @@ async def test_ask_tutor_persists_conversation(client, user_payload, monkeypatch
             "cefr_level": cefr_level,
             "context_chunks": [chunk],
             "answer": f"Here's the answer to: {question}",
+            "input_tokens": 42,
+            "output_tokens": 17,
         }
 
     monkeypatch.setattr("app.services.tutor_service.ask_tutor", fake_ask_tutor)
@@ -157,6 +159,8 @@ async def test_cannot_access_another_users_conversation(client, user_payload, mo
             "cefr_level": cefr_level,
             "context_chunks": [],
             "answer": "ok",
+            "input_tokens": 10,
+            "output_tokens": 5,
         }
 
     monkeypatch.setattr("app.services.tutor_service.ask_tutor", fake_ask_tutor)

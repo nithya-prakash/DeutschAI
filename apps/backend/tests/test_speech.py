@@ -57,6 +57,8 @@ def _fake_conversation_turn(reply="Welchen Film hast du gesehen?", grammar=70, v
             "grammar_score": grammar,
             "vocabulary_score": vocab,
             "feedback": "Almost — should be 'bin gegangen', not 'habe gegangen'.",
+            "input_tokens": 30,
+            "output_tokens": 20,
         }
 
     return _run

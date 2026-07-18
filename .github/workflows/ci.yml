@@ -40,3 +40,24 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+
+  # Phase 6: wired up, not pointed at anything real yet. Builds both images
+  # on every push to main (a real, previously-missing regression check — a
+  # broken Dockerfile now fails CI) but never pushes them anywhere. No
+  # registry, no secrets, no cloud account, no cost — deploying to a real
+  # target is a separate decision, made explicitly, not a side effect of
+  # this job existing. See docs/ROADMAP.md Phase 6.
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t deutschai-backend:ci ./apps/backend
+      - name: Build frontend image
+        run: docker build -t deutschai-frontend:ci ./apps/frontend
+      - name: No deployment target configured
+        run: |
+          echo "Images build cleanly. No deployment target is configured yet —"
+          echo "see docs/ROADMAP.md Phase 6 for the decision this is waiting on."

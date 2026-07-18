@@ -14,6 +14,6 @@ test("a new user can register, log in, and see the dashboard", async ({ page }) 
   await page.getByRole("button", { name: /create account/i }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText("Your dashboard")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your dashboard", exact: true })).toBeVisible();
   await expect(page.getByText("Current streak")).toBeVisible();
 });

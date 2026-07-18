@@ -1,4 +1,4 @@
-# Architecture (Phase 5)
+# Architecture (Phase 6)
 
 ## Why clean architecture, here
 
@@ -370,9 +370,60 @@ DB, no LLM, unit-testable in isolation):
   the app tests any of those three yet). Grammar/vocabulary/speaking moved
   out of the locked list since Phase 5 made them real.
 
+## Monitoring, CI/CD, admin panel (Phase 6)
+
+**Observability** (`app/main.py`): Sentry and OpenTelemetry are each gated
+behind their own optional setting (`SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT`
+in `core/config.py`) — unset means quietly absent, the same pattern
+`ANTHROPIC_API_KEY` already established. OTel is skipped entirely rather
+than initialized with a no-op exporter when unset, since instrumenting
+spans with nowhere real to send them would just be decorative. Prometheus
+and Grafana are out of scope for now — no real production traffic yet to
+make dashboards meaningful.
+
+A global exception handler (`app/main.py`) catches unhandled errors,
+logs them, and persists a real `ErrorLogEntry` row via the same overridable
+`get_db` dependency the rest of the app uses (so the test suite's DB
+override applies to it too, rather than it silently writing to a different
+database). This is deliberately *not* a Sentry-API proxy: reading issues
+back from Sentry needs a second credential distinct from `SENTRY_DSN` and
+would mostly re-implement Sentry's own dashboard. Sentry still receives the
+same exceptions independently via its own ASGI integration — the local
+table is a simpler, complementary, no-extra-dependency view for the admin
+panel.
+
+**LLM usage tracking**: `TutorState`/`ConversationTurnState` (the Tutor and
+Conversation agents' LangGraph state) each gained `input_tokens`/
+`output_tokens`, read from `response.usage_metadata` inside the existing
+`_generate` node — the graphs themselves stay DB-free, exactly like
+`grammar_score` already worked in `conversation_agent.py`. `TutorService`
+and `SpeechService` (which already hold a DB session) persist an
+`LLMUsageEvent` row after each real call. Fake chat models in tests don't
+set `usage_metadata`, so `getattr(response, "usage_metadata", None) or {}`
+defaults cleanly to 0 there — a correct default, not a masked failure.
+
+**Admin panel** (`/admin`, `app/services/admin_service.py`): gated on
+`get_current_superuser` (`app/api/deps.py`) — the first real use of
+`is_superuser` anywhere in the codebase. Real per-service reachability
+checks (Postgres via `SELECT 1`, Redis via `PING`, Qdrant via
+`get_collections()`, MinIO via `bucket_exists`), real session activity
+aggregated across all users (`StudySessionRepository.list_all_since`, distinct
+from the per-user `list_for_user_since` the dashboard uses), real LLM token
+counts (empty until there's a configured key and real calls), and the local
+error log above. "Sessions" here means `StudySession` activity — the only
+session concept this app has, since auth is stateless JWT with no
+server-side session table.
+
+**CI/CD** (`.github/workflows/ci.yml`): a `deploy` job builds both Docker
+images on every push to `main` (previously nothing validated the Dockerfiles
+still build) but pushes nothing anywhere — no registry, no secrets, no
+cloud account. A real deployment target is a separate, explicit decision
+the user opted to defer this phase, not a side effect of the pipeline
+existing.
+
 ## What's deliberately not built yet
 
-Podcast/article recommendations, a background job queue (rq/arq), and
-everything in `ROADMAP.md`'s Phase 6 (monitoring, CI/CD, admin panel,
-production deployment) are **not** stubbed with fake logic — they're
-absent, not filled with placeholder numbers or invented content.
+Podcast/article recommendations, a background job queue (rq/arq),
+Prometheus/Grafana dashboards, and a real production deployment target are
+**not** stubbed with fake logic — they're absent, not filled with
+placeholder numbers or invented content.

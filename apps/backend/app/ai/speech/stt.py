@@ -52,3 +52,9 @@ def transcribe(model: Transcriber, audio_bytes: bytes, suffix: str = ".webm") ->
 def transcribe_audio(audio_bytes: bytes, suffix: str = ".webm") -> str:
     """Transcribe against the real, locally-cached Whisper model."""
     return transcribe(get_whisper_model(), audio_bytes, suffix=suffix)
+
+
+def is_model_cached() -> bool:
+    """Whether the Whisper model has already been downloaded — used by the
+    admin panel's system-health view, doesn't trigger a download itself."""
+    return _CACHE_DIR.is_dir() and any(_CACHE_DIR.iterdir())

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.conversation_agent import run_conversation_turn
 from app.ai.speech.stt import transcribe_audio
 from app.ai.speech.tts import synthesize_speech
+from app.core.config import get_settings
 from app.domain.schemas.speech import (
     SpeechConversationRead,
     SpeechConversationSummary,
@@ -17,9 +18,13 @@ from app.domain.schemas.speech import (
 )
 from app.infrastructure.object_store.minio_client import ObjectStore
 from app.models.conversation import MessageRole
+from app.models.llm_usage_event import LLMUsageEvent
 from app.models.speech_conversation import SpeechConversation
 from app.models.user import User
+from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.speech_conversation_repository import SpeechConversationRepository
+
+settings = get_settings()
 
 # Known browser MediaRecorder mime types <-> a stable file extension, so the
 # original content-type survives the round trip through object storage
@@ -95,6 +100,16 @@ class SpeechService:
         user_turn.grammar_score = result["grammar_score"]
         user_turn.vocabulary_score = result["vocabulary_score"]
         user_turn.feedback = result["feedback"]
+
+        await LLMUsageRepository(self.session).create(
+            LLMUsageEvent(
+                user_id=user.id,
+                agent_name="conversation",
+                model=settings.ANTHROPIC_MODEL,
+                input_tokens=result["input_tokens"],
+                output_tokens=result["output_tokens"],
+            )
+        )
 
         reply_audio = synthesize_speech(result["reply"])
         assistant_key = f"speech/{conversation.id}/{uuid.uuid4()}.wav"

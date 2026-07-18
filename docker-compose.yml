@@ -89,6 +89,9 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-deutschai-media}
       WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-base}
       PIPER_VOICE: ${PIPER_VOICE:-de_DE-thorsten-medium}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-deutschai-backend}
     ports:
       - "8000:8000"
     volumes:
@@ -106,7 +109,7 @@ services:
       dockerfile: Dockerfile
       target: dev
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
     ports:
       - "3000:3000"
     volumes:

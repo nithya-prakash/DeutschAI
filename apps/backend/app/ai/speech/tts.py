@@ -126,3 +126,11 @@ def synthesize(voice: Synthesizer, text: str) -> bytes:
 def synthesize_speech(text: str) -> bytes:
     """Synthesize against the real, locally-cached Piper voice."""
     return synthesize(get_piper_voice(), text)
+
+
+def is_model_cached() -> bool:
+    """Whether the Piper binary + voice have already been downloaded — used
+    by the admin panel's system-health view, doesn't trigger a download."""
+    return (_CACHE_DIR / "piper" / "piper").exists() and (
+        _CACHE_DIR / f"{settings.PIPER_VOICE}.onnx"
+    ).exists()

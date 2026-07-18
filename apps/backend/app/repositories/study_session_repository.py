@@ -22,3 +22,11 @@ class StudySessionRepository(BaseRepository[StudySession]):
             .order_by(StudySession.studied_on.asc())
         )
         return list(result.scalars().all())
+
+    async def list_all_since(self, since: datetime) -> list[StudySession]:
+        """Across every user — the admin panel's session-activity view,
+        unlike `list_for_user_since` which scopes to one learner."""
+        result = await self.session.execute(
+            select(StudySession).where(StudySession.studied_on >= since)
+        )
+        return list(result.scalars().all())

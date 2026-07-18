@@ -1,5 +1,6 @@
-// Mirrors app/domain/schemas/* on the backend. Kept hand-in-sync for now;
-// Phase 6 adds OpenAPI-generated client types so this file can be deleted.
+// Mirrors app/domain/schemas/* on the backend. Kept hand-in-sync — still
+// true as of Phase 6; OpenAPI-generated client types remain a candidate for
+// a later pass, not something this phase added.
 
 export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
@@ -11,6 +12,7 @@ export interface UserRead {
   target_language: string;
   cefr_level: CEFRLevel;
   is_active: boolean;
+  is_superuser: boolean;
   created_at: string;
 }
 
@@ -253,4 +255,48 @@ export interface SubmitTurnResponse {
   conversation_id: string;
   user_turn: SpeechTurnRead;
   assistant_turn: SpeechTurnRead;
+}
+
+// --- Phase 6: Admin panel ---
+// Every field here is real data, a real reachability check, or an honest
+// zero/empty value — nothing is fabricated (see docs/ARCHITECTURE.md).
+
+export interface ServiceStatus {
+  name: string;
+  reachable: boolean;
+}
+
+export interface SystemHealth {
+  services: ServiceStatus[];
+  anthropic_configured: boolean;
+  sentry_configured: boolean;
+  otel_configured: boolean;
+  whisper_model_cached: boolean;
+  piper_model_cached: boolean;
+}
+
+export interface AgentUsageTotals {
+  agent_name: string;
+  call_count: number;
+  input_tokens: number;
+  output_tokens: number;
+}
+
+export interface LLMUsageSummary {
+  by_agent: AgentUsageTotals[];
+}
+
+export interface SessionActivity {
+  sessions_today: number;
+  sessions_this_week: number;
+  active_users_this_week: number;
+}
+
+export interface ErrorLogEntryRead {
+  id: string;
+  created_at: string;
+  method: string;
+  path: string;
+  exception_type: string;
+  message: string;
 }

@@ -94,6 +94,14 @@ class Settings(BaseSettings):
     # cached locally on first use — same pattern as fastembed's embedding model.
     PIPER_VOICE: str = "de_DE-thorsten-medium"
 
+    # --- Observability (Phase 6) ---
+    # Both left unset in local dev by default, same honest-gap pattern as
+    # ANTHROPIC_API_KEY: unset means the feature is quietly absent (no Sentry
+    # capture, no OTel exporter configured) rather than faked — see app/main.py.
+    SENTRY_DSN: str | None = None
+    OTEL_EXPORTER_OTLP_ENDPOINT: str | None = None
+    OTEL_SERVICE_NAME: str = "deutschai-backend"
+
 
 @lru_cache
 def get_settings() -> Settings:

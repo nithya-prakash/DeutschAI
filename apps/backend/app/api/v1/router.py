@@ -2,6 +2,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    admin,
     auth,
     dashboard,
     health,
@@ -29,3 +30,4 @@ api_router.include_router(memory.router)
 api_router.include_router(quizzes.router)
 api_router.include_router(speech.router)
 api_router.include_router(recommendations.router)
+api_router.include_router(admin.router)
