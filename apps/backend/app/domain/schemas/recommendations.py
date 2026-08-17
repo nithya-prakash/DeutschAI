@@ -1,8 +1,7 @@
 """Recommendation Engine response schema — internal content only (grammar
 topics + vocabulary), ranked by real data (forgetting-curve retention,
-mistake history). Podcasts/articles aren't included: there's no real
-external content source wired up anywhere in the app yet (see
-docs/ROADMAP.md) — nothing is fabricated here to fill that gap.
+mistake history). Podcasts/articles aren't included yet: there's no
+external content source integrated (see docs/FEATURES.md's Future Work).
 """
 import uuid
 

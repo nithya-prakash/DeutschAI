@@ -1,4 +1,4 @@
-"""MinIO client factory — object storage for Phase 4 speech audio blobs.
+"""MinIO client factory — object storage for speech audio blobs.
 
 Mirrors `vector_store/qdrant_client.py`'s shape: a cached factory function,
 plus a thin wrapper class so services depend on `ObjectStore` (an interface

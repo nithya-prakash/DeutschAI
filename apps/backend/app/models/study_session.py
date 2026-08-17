@@ -1,8 +1,8 @@
 """Study session log.
 
-The minimal real data source behind Phase 1's dashboard (streak, weekly
-hours). From Phase 2 onward, the Learning Engine writes richer session
-records here (skills practiced, lesson ids, mastery deltas).
+The data source behind the dashboard's streak and weekly-hours stats. The
+Learning Engine writes richer session records here as it grows (skills
+practiced, lesson ids, mastery deltas).
 """
 import uuid
 from datetime import datetime

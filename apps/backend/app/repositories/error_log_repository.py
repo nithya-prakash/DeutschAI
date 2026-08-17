@@ -1,4 +1,4 @@
-"""Data access for ErrorLogEntry — Phase 6 admin panel's "Error logs" tab."""
+"""Data access for ErrorLogEntry — backs the admin panel's "Error logs" tab."""
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

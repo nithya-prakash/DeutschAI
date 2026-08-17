@@ -36,7 +36,7 @@ async def test_new_user_has_zeroed_summary(client, user_payload):
     assert len(body["last_12_weeks"]) == 12 * 7
     assert len(body["locked_insights"]) > 0
 
-    # Phase 5: no data yet anywhere means honest gaps, not fabricated numbers.
+    # No data yet anywhere means clear gaps, not placeholder numbers.
     assert body["skill_scores"] == {"grammar": None, "vocabulary": None, "speaking": None}
     assert body["weakest_topics"] == []
     assert body["strongest_topics"] == []
@@ -83,7 +83,7 @@ async def test_two_sessions_same_day_accumulate_minutes(client, user_payload):
     assert summary.json()["current_streak_days"] == 1
 
 
-# --- Phase 5: skill scores, topic rankings, forecasting, habit intelligence ---
+# --- Skill scores, topic rankings, forecasting, habit intelligence ---
 
 
 async def _get_topic_id(client, headers, name: str) -> str:

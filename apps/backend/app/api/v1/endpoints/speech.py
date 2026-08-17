@@ -1,4 +1,4 @@
-"""Conversation Mode endpoints — Phase 4 speech practice."""
+"""Conversation Mode endpoints — speech practice."""
 import uuid
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status

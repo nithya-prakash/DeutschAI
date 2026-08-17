@@ -1,7 +1,6 @@
 """Admin panel response schemas. Every field here is either real data
 already in the DB, a real reachability check performed at request time, or
-an honest zero/empty value — nothing here is fabricated (see
-docs/ARCHITECTURE.md)."""
+a zero/empty value where no data exists yet (see docs/ARCHITECTURE.md)."""
 import uuid
 from datetime import datetime
 

@@ -80,13 +80,13 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str | None = None
     ANTHROPIC_MODEL: str = "claude-sonnet-5"
 
-    # --- Object storage (Phase 4: speech audio blobs) ---
+    # --- Object storage (speech audio blobs) ---
     MINIO_ENDPOINT: str = "localhost:9000"
     MINIO_ACCESS_KEY: str = "deutschai"
     MINIO_SECRET_KEY: str = "deutschai123"
     MINIO_BUCKET: str = "deutschai-media"
 
-    # --- Speech engine (Phase 4) ---
+    # --- Speech engine ---
     # faster-whisper model size — "base" is a CPU-friendly tradeoff for local dev;
     # bump to "small"/"medium" for better accuracy if the host has the CPU to spare.
     WHISPER_MODEL_SIZE: str = "base"
@@ -94,10 +94,10 @@ class Settings(BaseSettings):
     # cached locally on first use — same pattern as fastembed's embedding model.
     PIPER_VOICE: str = "de_DE-thorsten-medium"
 
-    # --- Observability (Phase 6) ---
-    # Both left unset in local dev by default, same honest-gap pattern as
-    # ANTHROPIC_API_KEY: unset means the feature is quietly absent (no Sentry
-    # capture, no OTel exporter configured) rather than faked — see app/main.py.
+    # --- Observability ---
+    # Both left unset in local dev by default, same pattern as
+    # ANTHROPIC_API_KEY: unset means the feature is quietly inactive (no Sentry
+    # capture, no OTel exporter configured) — see app/main.py.
     SENTRY_DSN: str | None = None
     OTEL_EXPORTER_OTLP_ENDPOINT: str | None = None
     OTEL_SERVICE_NAME: str = "deutschai-backend"

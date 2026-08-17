@@ -98,8 +98,8 @@ def _parse_node(state: ConversationTurnState) -> ConversationTurnState:
             "feedback": str(data["feedback"]),
         }
     except (json.JSONDecodeError, KeyError, TypeError, ValueError):
-        # Honest fallback: keep the raw text as the reply rather than
-        # fabricating scores the model didn't actually produce.
+        # Fallback: keep the raw text as the reply rather than inventing
+        # scores the model didn't actually produce.
         return {
             **state,
             "reply": state["raw_response"].strip(),

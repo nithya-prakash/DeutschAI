@@ -1,7 +1,6 @@
-"""Real per-call Claude token usage — Phase 6 admin panel's "LLM token
-spend" reads from this table. Written by the service layer (TutorService,
-SpeechService) after each real LLM call, from `response.usage_metadata` —
-never estimated or backfilled."""
+"""Per-call Claude token usage — backs the admin panel's "LLM token
+spend" view. Written by the service layer (TutorService, SpeechService)
+after each LLM call, from `response.usage_metadata`."""
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, String, Uuid

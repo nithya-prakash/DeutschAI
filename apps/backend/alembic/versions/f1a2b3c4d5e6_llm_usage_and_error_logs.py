@@ -1,4 +1,4 @@
-"""Phase 6: LLM usage events and error log entries
+"""LLM usage events and error log entries
 
 Revision ID: f1a2b3c4d5e6
 Revises: 9c3f4d7a1e2b

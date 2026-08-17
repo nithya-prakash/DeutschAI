@@ -1,9 +1,9 @@
-"""Conversation Mode (Phase 4) request/response schemas.
+"""Conversation Mode request/response schemas.
 
-Grammar/vocabulary scores are real (Claude-scored via the Conversation
-Agent). Pronunciation/fluency are never included here — there's no real
-signal for either yet, so the frontend shows them as locked rather than the
-API pretending to have a number (see docs/ARCHITECTURE.md)."""
+Grammar/vocabulary scores are Claude-scored via the Conversation Agent.
+Pronunciation/fluency are never included here — there's no scoring signal
+for either yet, so the frontend shows them as locked instead of the API
+returning a placeholder number (see docs/ARCHITECTURE.md)."""
 import uuid
 from datetime import datetime
 

@@ -1,6 +1,6 @@
 """Dashboard summary computation.
 
-Streak and weekly-minutes logic lives here; Phase 5's skill scores, topic
+Streak and weekly-minutes logic lives here; skill scores, topic
 rankings, forecast, and habit-intelligence figures come from
 `AnalyticsService`, and the motivation banner from `MotivationService` —
 composed together into one `DashboardSummary` here, the single place the
@@ -31,11 +31,11 @@ WEEKS_OF_HISTORY = 12  # how far back the heatmap/weekly-minutes display goes
 DATA_FETCH_DAYS = 365
 
 # What's still genuinely missing platform-wide, kept explicit (rather than
-# silently omitted) so the frontend renders an honest "coming soon" instead
-# of a fabricated number. Grammar/vocabulary/speaking scores, topic
-# rankings, forecasting, and habit intelligence all shipped in Phase 5 —
-# removed from this list accordingly rather than left stale. Listening/
-# reading/writing have no real signal anywhere in the app yet.
+# silently omitted) so the frontend renders a clear "coming soon" instead
+# of a placeholder number. Grammar/vocabulary/speaking scores, topic
+# rankings, forecasting, and habit intelligence are all implemented and
+# removed from this list accordingly. Listening/reading/writing have no
+# scoring signal yet.
 LOCKED_INSIGHTS = [
     "Listening comprehension score",
     "Reading comprehension score",

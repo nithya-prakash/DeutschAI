@@ -1,4 +1,4 @@
-"""Phase 4: speech conversations and turns
+"""Speech conversations and turns
 
 Revision ID: 9c3f4d7a1e2b
 Revises: 4bdbac7f97ac

@@ -1,14 +1,13 @@
 """Dashboard summary schema.
 
-Phase 1 shipped real numbers for streak/study minutes/CEFR level. Phase 5
-adds real skill scores, topic rankings, a progress forecast, habit
-intelligence, and motivation messaging — computed by `AnalyticsService` /
-`MotivationService` from actual usage data. Every new field is nullable
-(or an empty list) exactly where the underlying data doesn't exist yet for
-a given user, so the frontend can render an honest gap instead of a
-fabricated number. `locked_insights` now only lists what's genuinely still
-missing platform-wide (listening/reading/writing have no real signal
-anywhere in the app yet).
+Ships real numbers for streak/study minutes/CEFR level, plus skill scores,
+topic rankings, a progress forecast, habit intelligence, and motivation
+messaging — computed by `AnalyticsService` / `MotivationService` from
+actual usage data. Every field is nullable (or an empty list) exactly
+where the underlying data doesn't exist yet for a given user, so the
+frontend can render a clear gap instead of a placeholder number.
+`locked_insights` lists what's genuinely still missing platform-wide
+(listening/reading/writing have no scoring signal yet).
 """
 import uuid
 from datetime import date, datetime

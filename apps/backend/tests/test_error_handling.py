@@ -1,4 +1,4 @@
-"""Global exception handler tests — Phase 6 local error-log persistence
+"""Global exception handler tests — local error-log persistence
 (app/main.py's `_unhandled_exception_handler`).
 
 Two of these tests build their own client with `raise_app_exceptions=False`

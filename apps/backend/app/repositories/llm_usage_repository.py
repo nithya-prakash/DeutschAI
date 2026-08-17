@@ -1,4 +1,4 @@
-"""Data access for LLMUsageEvent — Phase 6 admin panel's "LLM token spend"."""
+"""Data access for LLMUsageEvent — backs the admin panel's "LLM token spend"."""
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

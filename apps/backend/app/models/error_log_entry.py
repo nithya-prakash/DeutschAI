@@ -1,7 +1,7 @@
-"""Local record of unhandled request errors — Phase 6 admin panel's "Error
-logs" tab reads from this table. Written by the global exception handler in
+"""Local record of unhandled request errors — backs the admin panel's
+"Error logs" tab. Written by the global exception handler in
 `app/main.py`. Complementary to Sentry (which captures the same exceptions
-independently via its own ASGI integration for real alerting); this is a
+independently via its own ASGI integration for alerting); this is a
 simpler, local, always-available view with no external dependency."""
 from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column

@@ -1,7 +1,7 @@
 """Admin panel business logic: system health, LLM usage, session activity,
 error logs, and the user list. Every value is either real data already in
-the DB, a real reachability check performed at request time, or an honest
-zero/empty result — nothing here is fabricated (see docs/ARCHITECTURE.md).
+the DB, a real reachability check performed at request time, or a
+zero/empty result where no data exists yet (see docs/ARCHITECTURE.md).
 Gated on `get_current_superuser` at the endpoint layer, not here.
 """
 from dataclasses import dataclass

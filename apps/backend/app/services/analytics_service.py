@@ -1,7 +1,7 @@
 """Analytics Engine: turns raw per-user history into skill scores, topic
 rankings, a progress forecast, and habit-intelligence figures. No metric
 here is shown unless there's real data behind it — missing data means
-`None`/an empty list, never a fabricated number (see docs/ARCHITECTURE.md).
+`None`/an empty list (see docs/ARCHITECTURE.md).
 """
 import uuid
 from dataclasses import dataclass

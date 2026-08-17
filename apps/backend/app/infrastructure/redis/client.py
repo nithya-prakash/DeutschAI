@@ -1,7 +1,7 @@
 """Redis client factory.
 
-Used today for rate limiting hooks; from Phase 2 onward also backs
-background job queues and planner/session caching.
+Used for rate limiting hooks and backs the planner cache; a candidate for
+background job queues as the platform grows.
 """
 from functools import lru_cache
 

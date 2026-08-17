@@ -1,11 +1,11 @@
 """Memory Agent business logic.
 
-Today, memories are written internally by the Assessment Agent (a wrong quiz
+Memories are written internally by the Assessment Agent (a wrong quiz
 answer becomes a `MISTAKE` memory tied to that question's topic) and surfaced
 to the user read-only as a "recent mistakes" feed. There's no user-facing
-"add a memory" endpoint yet — see docs/ROADMAP.md for the deeper feedback
-loop (memories influencing the Planner Agent's weak-topic weighting) that's
-a natural next step once there's real usage data to tune it against.
+"add a memory" endpoint yet. A deeper feedback loop — memories influencing
+the Planner Agent's weak-topic weighting — is a natural next step once
+there's usage data to tune it against.
 """
 import uuid
 from dataclasses import dataclass

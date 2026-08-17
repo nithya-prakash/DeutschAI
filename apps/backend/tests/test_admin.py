@@ -55,7 +55,7 @@ async def test_system_health_reflects_configuration(client, user_payload, db_ses
     assert response.status_code == 200
     body = response.json()
     # No ANTHROPIC_API_KEY/SENTRY_DSN/OTEL_EXPORTER_OTLP_ENDPOINT set in the
-    # test environment — honest "not configured", not fabricated.
+    # test environment, so these are correctly reported as not configured.
     assert body["anthropic_configured"] is False
     assert body["sentry_configured"] is False
     assert body["otel_configured"] is False

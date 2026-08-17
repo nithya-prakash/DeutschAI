@@ -1,6 +1,5 @@
-// Mirrors app/domain/schemas/* on the backend. Kept hand-in-sync — still
-// true as of Phase 6; OpenAPI-generated client types remain a candidate for
-// a later pass, not something this phase added.
+// Mirrors app/domain/schemas/* on the backend. Kept hand-in-sync;
+// OpenAPI-generated client types remain a candidate for a later pass.
 
 export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
@@ -27,9 +26,9 @@ export interface DailyMinutes {
   minutes: number;
 }
 
-// --- Phase 5: Recommendation Engine, ML, Analytics ---
+// --- Recommendation Engine, ML, Analytics ---
 // Every field below is `null`/empty exactly where the backend has no real
-// data yet for that user — never a fabricated number (see docs/ARCHITECTURE.md).
+// data yet for that user (see docs/ARCHITECTURE.md).
 
 export interface SkillScores {
   grammar: number | null;
@@ -90,7 +89,7 @@ export interface ApiError {
   detail: string;
 }
 
-// --- Phase 2: Learning Engine ---
+// --- Learning Engine ---
 
 export type TopicCategory = "grammar" | "everyday_topic";
 export type TopicStatus = "not_started" | "in_progress" | "mastered";
@@ -142,7 +141,7 @@ export interface DailyPlan {
   blocks: PlanBlock[];
 }
 
-// --- Phase 3: AI Tutor, Assessment, Memory ---
+// --- AI Tutor, Assessment, Memory ---
 
 export interface AskTutorRequest {
   question: string;
@@ -222,7 +221,7 @@ export interface RecommendationResult {
   topics: RecommendedTopic[];
 }
 
-// --- Phase 4: Conversation Mode (speech) ---
+// --- Conversation Mode (speech) ---
 // Grammar/vocabulary scores are real (Claude-scored). Pronunciation/fluency
 // have no real signal yet, so they're never sent by the API at all — the
 // frontend renders them as locked via the same `LockedInsights` component
@@ -257,9 +256,9 @@ export interface SubmitTurnResponse {
   assistant_turn: SpeechTurnRead;
 }
 
-// --- Phase 6: Admin panel ---
-// Every field here is real data, a real reachability check, or an honest
-// zero/empty value — nothing is fabricated (see docs/ARCHITECTURE.md).
+// --- Admin panel ---
+// Every field here is real data, a real reachability check, or a zero/empty
+// value where no data exists yet (see docs/ARCHITECTURE.md).
 
 export interface ServiceStatus {
   name: string;

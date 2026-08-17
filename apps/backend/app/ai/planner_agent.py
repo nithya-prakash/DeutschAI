@@ -3,9 +3,9 @@
 Built as a LangGraph graph so the orchestration shape (assess -> allocate ->
 render) matches every other agent this platform will add, even though every
 node here is a deterministic Python function with no LLM call. That's a
-deliberate Phase 2 choice, not a placeholder: allocating study minutes across
+deliberate choice, not a placeholder: allocating study minutes across
 activities doesn't need generation, so an LLM would add cost and
-non-determinism for no benefit. Phase 3's Tutor Agent is where an LLM-backed
+non-determinism for no benefit. The Tutor Agent is where an LLM-backed
 node earns its place — inserting one here (e.g. a "narrate" node that turns
 `blocks` into a conversational summary) is a one-node change to the graph
 below, not a rewrite.

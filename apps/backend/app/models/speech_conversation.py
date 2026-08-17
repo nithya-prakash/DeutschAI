@@ -1,5 +1,5 @@
-"""A persisted Conversation Mode (Phase 4) speech practice thread and its
-turns — audio in, audio out, plus real grammar/vocabulary scoring on the
+"""A persisted Conversation Mode speech practice thread and its
+turns — audio in, audio out, plus grammar/vocabulary scoring on the
 user's turns. Separate from `Conversation`/`ConversationMessage` (the Tutor
 Agent's text Q&A threads): different content shape (audio blobs, scores)
 and a different agent (`app/ai/conversation_agent.py`)."""
@@ -50,7 +50,7 @@ class SpeechTurn(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     # Only ever set on USER turns (grading what the learner said); left null
     # for ASSISTANT turns and for USER turns where the Conversation Agent's
-    # JSON response failed to parse — never fabricated.
+    # JSON response failed to parse.
     grammar_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     vocabulary_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
