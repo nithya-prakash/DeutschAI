@@ -1,10 +1,11 @@
-# Architecture (Phase 6)
+# Architecture
 
 ## Why clean architecture, here
 
-The eventual system has a lot of moving parts (AI agents, RAG, speech, ML
-models) that don't exist yet. The backend is layered so that adding them later
-means adding new modules, not rewriting existing ones:
+The system has a lot of moving parts — AI agents, a RAG pipeline, a speech
+engine, ML components — spanning multiple layers of the backend. The
+codebase is layered so each of those stays independently testable and
+swappable:
 
 ```
 app/
@@ -35,8 +36,8 @@ Rules that keep this from rotting into a ball of mud:
 - **Services hold business logic, repositories don't.** `DashboardService`
   computes streaks; `StudySessionRepository` only knows how to fetch rows.
 - **Dependency injection via FastAPI's `Depends`.** `get_db`, `get_current_user`
-  are the only two dependencies right now; new agents/engines register their
-  own `Depends`-based providers rather than being imported as globals.
+  are the foundational dependencies; every agent/engine registers its own
+  `Depends`-based providers rather than being imported as a global.
 
 ## Why the DB types are dialect-portable
 
@@ -46,7 +47,7 @@ suite run against in-memory SQLite (`tests/conftest.py`) while production runs
 Postgres, without maintaining two schemas. Same models, two dialects, zero
 duplication.
 
-## Request flow (Phase 1)
+## Request flow
 
 ```mermaid
 sequenceDiagram
@@ -68,7 +69,7 @@ sequenceDiagram
     FE->>FE: invalidate dashboard query, re-render streak
 ```
 
-## Database schema (Phase 1 + 2 + 3)
+## Database schema
 
 ```mermaid
 erDiagram
@@ -178,13 +179,13 @@ erDiagram
 ```
 
 `GRAMMAR_TOPICS` is global reference data (same for every learner), seeded via
-the Phase 2 migration from `app/domain/curriculum_reference.py`. A missing
+migration from `app/domain/curriculum_reference.py`. A missing
 `UserTopicProgress` row means "not started" — rows are created lazily on the
-first status change rather than seeding 26 rows per new user. `QUIZ_QUESTIONS`
-follows the same pattern, seeded via the Phase 3 migration from
+first status change rather than seeding one row per topic per new user.
+`QUIZ_QUESTIONS` follows the same pattern, seeded via migration from
 `app/domain/quiz_reference.py`.
 
-## The Planner Agent (Phase 2's first LangGraph agent)
+## The Planner Agent
 
 `app/ai/planner_agent.py` builds a 3-node `StateGraph` (`assess → allocate →
 render`) that turns `{available_minutes, vocab_due_count, weak_topic_count}`
@@ -205,9 +206,9 @@ that calls the graph; the graph itself never touches a database or an HTTP
 request, which is what makes `generate_daily_plan()` trivially unit-testable
 (see `tests/test_planner.py`) without mocking anything.
 
-## RAG pipeline + Tutor Agent (Phase 3's first LLM-backed agent)
+## RAG Pipeline & Tutor Agent
 
-**Ingestion** (`app/ai/rag/ingest.py`): 16 original grammar notes
+**Ingestion** (`app/ai/rag/ingest.py`): grammar reference notes
 (`app/ai/rag/knowledge_base/*.md`, one per A1 topic) are split into
 paragraph-merged chunks (≤800 chars, never splitting mid-paragraph), embedded
 with `fastembed` (a local ONNX model — `paraphrase-multilingual-MiniLM-L12-v2`,
@@ -232,35 +233,30 @@ graph LR
 `build_tutor_graph(chat_model)` takes the chat model as a parameter rather
 than reaching for a global, which is what makes it testable without a real
 API key — `tests/test_tutor.py` passes a fake chat model and verifies
-retrieval + prompt assembly for real, while `get_chat_model()` (the
-production factory) raises `LLMNotConfiguredError` if the key is missing,
-caught by the endpoint and surfaced as an honest HTTP 503 — checked in this
-repo's own verification pass that this leaves no orphaned conversation rows
-behind (the DB session rolls back cleanly on the exception).
+retrieval + prompt assembly, while `get_chat_model()` (the production
+factory) raises `LLMNotConfiguredError` if the key is missing, caught by the
+endpoint and surfaced as an HTTP 503. The DB session rolls back cleanly on
+that exception, so no orphaned conversation rows are left behind.
 
 `TutorService` wraps the graph with conversation persistence
 (`conversations` / `conversation_messages`, with ownership checks) — the
 graph itself stays a pure function of `(question, cefr_level) -> answer`.
 
-## Assessment Agent + Memory Agent
+## Assessment Agent & Memory Agent
 
 Grading a multiple-choice answer is index comparison, so
-`AssessmentService` stays rule-based — no LLM call, matching the platform
-brief's own instruction not to reach for one where traditional logic
+`AssessmentService` stays rule-based — no LLM call, since traditional logic
 suffices. A wrong answer is written to `ai_memories` via `MemoryService`,
 tied to the question's topic; the "Recent mistakes" dashboard card reads
-that back. Phase 5's `AnalyticsService` and `RecommendationService` are the
-deeper use of these memories this docstring used to describe as a future
-extension — weakest/strongest topic ranking and recommended-topic focus
-both read `ai_memories` counts directly (see below).
+that back. `AnalyticsService` and `RecommendationService` also read
+`ai_memories` counts directly for weakest/strongest topic ranking and
+recommended-topic focus (see below).
 
 ## Auth
 
 Stateless JWT (access token, 30 min; refresh token, 30 days), `HS256`,
-verified in `app/api/deps.py::get_current_user`. No session storage
-needed — Redis is used for the planner cache (see above), not auth; a
-background job queue (rq/arq) is still pending, deferred until there's an
-actual async job to run.
+verified in `app/api/deps.py::get_current_user`. No session storage is
+needed — Redis backs the planner cache (see above), not auth.
 
 ## Frontend
 
@@ -274,156 +270,129 @@ actual async job to run.
   the bearer token and transparently retries once via the refresh endpoint on
   a 401, rather than every call site handling token refresh itself.
 
-## Speech engine + Conversation Mode (Phase 4)
+## Speech Engine & Conversation Mode
 
 Both STT and TTS run locally — no API key, no per-request cost, same
 philosophy as the RAG pipeline's `fastembed` choice:
 
 - **STT** (`app/ai/speech/stt.py`): `faster-whisper` (CTranslate2, no torch).
-  `transcribe(model, audio_bytes)` takes the model as a parameter — same
-  DI-for-testability shape as `tutor_agent.build_tutor_graph` — so tests
+  `transcribe(model, audio_bytes)` takes the model as a parameter — the same
+  dependency-injection shape as `tutor_agent.build_tutor_graph` — so tests
   inject a fake model instead of loading real weights.
-- **TTS** (`app/ai/speech/tts.py`): Piper, but via its official prebuilt CLI
-  binary rather than the `piper-tts` Python package — that package's native
-  `piper-phonemize` dependency publishes no Linux ARM64 wheel, which this
-  backend's Docker image needs on Apple Silicon. The binary and the
-  `de_DE-thorsten-medium` voice model are downloaded once and cached
-  locally (`.whisper_cache/`, `.piper_cache/`), mirroring fastembed's
-  download-once-then-cache pattern.
+- **TTS** (`app/ai/speech/tts.py`): Piper, invoked via its official prebuilt
+  CLI binary rather than the `piper-tts` Python package, for broader
+  platform wheel support. The binary and the voice model are downloaded
+  once and cached locally (`.whisper_cache/`, `.piper_cache/`), mirroring
+  fastembed's download-once-then-cache pattern.
 - **Object storage**: `app/infrastructure/object_store/minio_client.py`
-  wraps MinIO (finally in use — provisioned since Phase 1, idle until now)
-  for both the learner's uploaded recordings and the synthesized replies.
-  Playback is proxied through `GET /speech/turns/{id}/audio`
-  (ownership-checked, same JWT dependency as everything else) rather than a
-  public presigned URL, so auth stays centralized.
+  wraps MinIO for both the learner's uploaded recordings and the
+  synthesized replies. Playback is proxied through
+  `GET /speech/turns/{id}/audio` (ownership-checked, same JWT dependency as
+  everything else) rather than a public presigned URL, so auth stays
+  centralized.
 - **Conversation Agent** (`app/ai/conversation_agent.py`): a 2-node
   LangGraph graph (`generate -> parse`) reusing `tutor_agent.get_chat_model`
   rather than a second Anthropic client factory. One Claude call per turn
   does double duty — continues the dialogue in German at the learner's CEFR
   level, and scores the grammar/vocabulary of what they just said, returned
-  as JSON. If Claude's output doesn't parse, the `parse` node falls back to
-  the raw text as the reply with scores left `None` — an honest gap, not a
-  fabricated number.
-- **Pronunciation/fluency are not scored at all**: Claude has no audio
-  input, so there's no real signal for either. The API never sends these
-  fields; the frontend renders them as locked (`LockedInsights`, same
-  component the dashboard uses) rather than inventing something plausible.
+  as JSON. If the model's output doesn't parse as valid JSON, the `parse`
+  node falls back to the raw text as the reply, with scores left `None`.
+- Pronunciation and fluency are not scored, since Claude has no audio input
+  and there's no reliable signal for either; the frontend surfaces these as
+  locked metrics pending a dedicated pronunciation-analysis component (see
+  `FEATURES.md`'s Future Work).
 - `speech_conversations`/`speech_turns` are separate tables from
   `conversations`/`conversation_messages` (the Tutor Agent's text threads):
   different content shape (audio blobs, scores) and a different agent.
 
-## Recommendation Engine, ML, Analytics (Phase 5)
+## Recommendation Engine, ML & Analytics
 
-Everything here is computed from data Phases 1-4 already collect — **no new
-DB tables, no migration**. `app/ai/ml/` holds the pure-function models (no
+Every metric here is computed from data the platform already collects — no
+dedicated tables are needed. `app/ai/ml/` holds the pure-function models (no
 DB, no LLM, unit-testable in isolation):
 
 - **Forgetting curve** (`forgetting_curve.py`): Ebbinghaus-style exponential
-  decay (`R = e^(-t/S)`) over a vocab item's *existing* SM-2 state (ease
-  factor, interval, days since last review) — no dedicated review-history
-  table needed, since that state already encodes how well-learned a word is.
-  `days_since()` normalizes a DB-sourced timestamp before subtracting from
-  "now": SQLite (the test suite's engine) hands back naive datetimes even
-  for `DateTime(timezone=True)` columns, while Postgres preserves tzinfo —
-  a naive value is treated as UTC rather than left to raise.
+  decay (`R = e^(-t/S)`) over a vocab item's existing SM-2 state (ease
+  factor, interval, days since last review). `days_since()` normalizes a
+  DB-sourced timestamp before subtracting from "now": SQLite (the test
+  suite's engine) hands back naive datetimes even for `DateTime(timezone=
+  True)` columns, while Postgres preserves tzinfo — a naive value is
+  treated as UTC rather than left to raise.
 - **Habit Intelligence** (`habit_model.py`): a recency-weighted consistency
   score, a day-of-week/recent-trend blend for skip probability, and a
-  best-study-*day* detector — real weighted statistics from `StudySession`
-  history, not a hardcoded "N skips = at risk" threshold. Best study *day*
-  rather than *hour*: `studied_on` has no reliable per-user timezone behind
-  it (no timezone field on `User`), so reporting an hour would risk being
-  actively misleading, not just imprecise.
-- **Forecasting** (`forecasting.py`): a hand-rolled least-squares trend on
+  best-study-*day* detector — weighted statistics computed from
+  `StudySession` history. Best study *day* rather than *hour*: `studied_on`
+  has no reliable per-user timezone behind it (no timezone field on
+  `User`), so reporting an hour would risk being actively misleading.
+- **Forecasting** (`forecasting.py`): a least-squares trend fit over
   cumulative topics-mastered-over-time, extrapolated to a projected
-  completion date — deliberately not a heavier model; with only a handful
-  of mastery-date points per user, anything fancier would be overfitting
-  noise. Returns `None` on fewer than 2 distinct dates, a flat/negative
-  trend, or an already-complete curriculum.
+  completion date. Returns `None` on fewer than 2 distinct data points, a
+  flat/negative trend, or an already-complete curriculum.
 - **Recommendation Agent** (`app/ai/recommendation_agent.py`): a 3-node
   LangGraph graph (`assess -> rank -> render`), the same shape as
-  `planner_agent.py` and for the same reason — ranking pre-fetched
-  candidates by a real, precomputed score doesn't need generation, so every
-  node is deterministic. `RecommendationService` builds candidates from
-  reviewed vocab (retention-scored) and non-mastered topics with recorded
-  mistakes; **podcasts/articles are out of scope** — there's no real
-  external content source wired up anywhere in the app, and inventing
-  external URLs isn't something this build does.
+  `planner_agent.py` — ranking pre-fetched candidates by a precomputed score
+  doesn't need generation, so every node is deterministic.
+  `RecommendationService` builds candidates from reviewed vocabulary
+  (retention-scored) and non-mastered topics with recorded mistakes;
+  podcasts and articles are out of scope, since there's no external content
+  source integrated yet (see `FEATURES.md`'s Future Work).
 - **Motivation Agent** (`app/services/motivation_service.py`): deterministic
   message templates bucketed by days-since-last-session, not an LLM call —
-  the message space is small and bounded, so a rule picks a canned,
-  non-guilt-tripping message. Always "reduce and re-invite": every message
-  pairs encouragement with a *smaller* suggested-minutes figure, shown as a
-  suggestion the learner can still override in the Planner, not something
-  that silently mutates `PlannerService`'s output.
+  the message space is small and bounded, so a rule picks a canned message.
+  Every message pairs encouragement with a smaller suggested-minutes
+  figure, shown as a suggestion the learner can override in the Planner,
+  not something that silently mutates `PlannerService`'s output.
 - **`AnalyticsService`** composes all of the above into `DashboardSummary`'s
-  new fields (skill scores, topic rankings, forecast, consistency, at-risk
+  fields (skill scores, topic rankings, forecast, consistency, at-risk
   vocab count); `DashboardService.get_summary` also calls
   `MotivationService` and is the single place `/dashboard/summary` reads
-  from. It fetches `StudySession` history once over a wide window (365
-  days, `DATA_FETCH_DAYS`) rather than the display-only 12-week window, so
-  the Motivation Agent sees the learner's *actual* last session — a bug
-  caught during this phase's own verification: a learner who last studied
-  four months ago was incorrectly getting no motivation message at all
-  because their last session fell outside a too-narrow fetch window.
-- `LOCKED_INSIGHTS` shrank to just what's genuinely still missing
-  platform-wide: listening/reading/writing scores (no exercise anywhere in
-  the app tests any of those three yet). Grammar/vocabulary/speaking moved
-  out of the locked list since Phase 5 made them real.
+  from. It fetches `StudySession` history over a wide 365-day window
+  (`DATA_FETCH_DAYS`) rather than the display-only 12-week window, so
+  habit-intelligence and motivation calculations see the learner's actual
+  full history.
+- `LOCKED_INSIGHTS` reflects what genuinely has no data source yet
+  platform-wide: listening, reading, and writing scores, since no exercise
+  in the app currently evaluates those skills.
 
-## Monitoring, CI/CD, admin panel (Phase 6)
+## Monitoring, CI/CD & Admin Panel
 
 **Observability** (`app/main.py`): Sentry and OpenTelemetry are each gated
 behind their own optional setting (`SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT`
-in `core/config.py`) — unset means quietly absent, the same pattern
-`ANTHROPIC_API_KEY` already established. OTel is skipped entirely rather
+in `core/config.py`) — unset means inactive, consistent with how
+`ANTHROPIC_API_KEY` is handled. OpenTelemetry is skipped entirely rather
 than initialized with a no-op exporter when unset, since instrumenting
-spans with nowhere real to send them would just be decorative. Prometheus
-and Grafana are out of scope for now — no real production traffic yet to
-make dashboards meaningful.
+spans with nowhere to send them adds no value. Prometheus/Grafana
+dashboards are a candidate for a future pass once there's production
+traffic to chart.
 
-A global exception handler (`app/main.py`) catches unhandled errors,
-logs them, and persists a real `ErrorLogEntry` row via the same overridable
-`get_db` dependency the rest of the app uses (so the test suite's DB
-override applies to it too, rather than it silently writing to a different
-database). This is deliberately *not* a Sentry-API proxy: reading issues
-back from Sentry needs a second credential distinct from `SENTRY_DSN` and
-would mostly re-implement Sentry's own dashboard. Sentry still receives the
-same exceptions independently via its own ASGI integration — the local
-table is a simpler, complementary, no-extra-dependency view for the admin
-panel.
+A global exception handler (`app/main.py`) catches unhandled errors, logs
+them, and persists an `ErrorLogEntry` row via the same overridable `get_db`
+dependency the rest of the app uses. This is intentionally not a Sentry-API
+proxy: reading issues back from Sentry needs a second credential distinct
+from `SENTRY_DSN` and would largely re-implement Sentry's own dashboard.
+Sentry still receives the same exceptions independently via its own ASGI
+integration — the local table is a simpler, dependency-free view for the
+admin panel.
 
 **LLM usage tracking**: `TutorState`/`ConversationTurnState` (the Tutor and
-Conversation agents' LangGraph state) each gained `input_tokens`/
+Conversation agents' LangGraph state) each carry `input_tokens`/
 `output_tokens`, read from `response.usage_metadata` inside the existing
-`_generate` node — the graphs themselves stay DB-free, exactly like
-`grammar_score` already worked in `conversation_agent.py`. `TutorService`
-and `SpeechService` (which already hold a DB session) persist an
-`LLMUsageEvent` row after each real call. Fake chat models in tests don't
-set `usage_metadata`, so `getattr(response, "usage_metadata", None) or {}`
-defaults cleanly to 0 there — a correct default, not a masked failure.
+`_generate` node — the graphs themselves stay DB-free, the same pattern
+`grammar_score` uses in `conversation_agent.py`. `TutorService` and
+`SpeechService` (which already hold a DB session) persist an
+`LLMUsageEvent` row after each real call.
 
 **Admin panel** (`/admin`, `app/services/admin_service.py`): gated on
-`get_current_superuser` (`app/api/deps.py`) — the first real use of
-`is_superuser` anywhere in the codebase. Real per-service reachability
+`get_current_superuser` (`app/api/deps.py`). Real per-service reachability
 checks (Postgres via `SELECT 1`, Redis via `PING`, Qdrant via
-`get_collections()`, MinIO via `bucket_exists`), real session activity
-aggregated across all users (`StudySessionRepository.list_all_since`, distinct
-from the per-user `list_for_user_since` the dashboard uses), real LLM token
-counts (empty until there's a configured key and real calls), and the local
-error log above. "Sessions" here means `StudySession` activity — the only
-session concept this app has, since auth is stateless JWT with no
-server-side session table.
+`get_collections()`, MinIO via `bucket_exists`), session activity
+aggregated across all users (`StudySessionRepository.list_all_since`,
+distinct from the per-user `list_for_user_since` the dashboard uses), LLM
+token counts by agent, and the error log above. "Sessions" here means
+`StudySession` activity — the only session concept this app has, since auth
+is stateless JWT with no server-side session table.
 
 **CI/CD** (`.github/workflows/ci.yml`): a `deploy` job builds both Docker
-images on every push to `main` (previously nothing validated the Dockerfiles
-still build) but pushes nothing anywhere — no registry, no secrets, no
-cloud account. A real deployment target is a separate, explicit decision
-the user opted to defer this phase, not a side effect of the pipeline
-existing.
-
-## What's deliberately not built yet
-
-Podcast/article recommendations, a background job queue (rq/arq),
-Prometheus/Grafana dashboards, and a real production deployment target are
-**not** stubbed with fake logic — they're absent, not filled with
-placeholder numbers or invented content.
+images on every push to `main` to validate they remain deployable, without
+pushing to a registry. Deploying to a production target remains a separate,
+deliberate decision (see `FEATURES.md`'s Future Work).

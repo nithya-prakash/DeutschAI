@@ -56,8 +56,7 @@ export default function ConversationPage() {
               <p className="text-sm font-medium">Conversation Agent isn&apos;t configured yet</p>
               <p className="text-sm text-muted-foreground">
                 This needs an <code>ANTHROPIC_API_KEY</code> set on the backend to generate real
-                replies and scoring. Everything else in the app works without it — see
-                docs/ROADMAP.md.
+                replies and scoring. Everything else in the app works without it.
               </p>
             </div>
           </CardContent>

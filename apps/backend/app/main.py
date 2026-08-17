@@ -93,13 +93,13 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.PROJECT_NAME,
         description=(
-            "DeutschAI backend API. Phase 6: authentication, user profiles, "
-            "the study-streak dashboard, vocabulary spaced repetition, the "
+            "DeutschAI backend API: authentication, user profiles, the "
+            "study-streak dashboard, vocabulary spaced repetition, the "
             "curriculum roadmap, a LangGraph daily planner, a RAG-grounded "
             "AI Tutor Agent, Conversation Mode, a recommendation/analytics "
             "engine, and observability + an admin panel (needs "
             "ANTHROPIC_API_KEY / SENTRY_DSN / OTEL_EXPORTER_OTLP_ENDPOINT "
-            "for the gated pieces). See /docs/ROADMAP.md for the full plan."
+            "for the gated pieces)."
         ),
         version="0.6.0",
         openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",

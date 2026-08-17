@@ -58,8 +58,7 @@ export default function TutorPage() {
               <p className="text-sm font-medium">Tutor Agent isn&apos;t configured yet</p>
               <p className="text-sm text-muted-foreground">
                 This needs an <code>ANTHROPIC_API_KEY</code> set on the backend to generate
-                real, grounded answers. Everything else in the app works without it — see
-                docs/ROADMAP.md.
+                real, grounded answers. Everything else in the app works without it.
               </p>
             </div>
           </CardContent>
