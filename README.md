@@ -12,6 +12,10 @@ FastAPI backend and a Next.js frontend. See
 capabilities and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the
 technical design.
 
+## Demo
+
+![DeutschAI walkthrough: dashboard, vocabulary, curriculum, planner, quiz, and the admin panel](docs/assets/demo.gif)
+
 ## Features
 
 - Email/password registration and login (JWT access + refresh tokens)
