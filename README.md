@@ -14,7 +14,7 @@ technical design.
 
 ## Demo
 
-![DeutschAI walkthrough: dashboard, vocabulary, curriculum, planner, quiz, and the admin panel](docs/assets/demo.gif)
+![DeutschAI walkthrough: dashboard, vocabulary, curriculum, planner, quiz, reading, listening, writing, and the admin panel](docs/assets/demo.gif)
 
 ## Features
 
