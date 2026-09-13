@@ -120,7 +120,8 @@ export default function DashboardPage() {
           <CardTitle>Skill scores</CardTitle>
           <CardDescription>
             Grammar from quiz accuracy, vocabulary from forgetting-curve retention, speaking from
-            Conversation Mode. Listening/reading/writing have no real signal yet — see below.
+            Conversation Mode, reading/listening from comprehension exercises, writing from the
+            Writing Agent.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -161,18 +162,19 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Coming to your dashboard</CardTitle>
-          <CardDescription>
-            These metrics need the Learning, Assessment, and ML engines from later phases — shown
-            here honestly as locked rather than filled with placeholder numbers.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LockedInsights insights={data.locked_insights} />
-        </CardContent>
-      </Card>
+      {data.locked_insights.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Coming to your dashboard</CardTitle>
+            <CardDescription>
+              Shown here honestly as locked rather than filled with placeholder numbers.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LockedInsights insights={data.locked_insights} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

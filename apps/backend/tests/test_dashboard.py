@@ -3,7 +3,10 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 
+from app.ai.speech.stt import TranscriptionResult
 from app.models.grammar_topic import GrammarTopic
+from app.models.listening_script import ListeningScript
+from app.models.reading_passage import ReadingPassage
 from app.models.study_session import StudySession
 from app.models.user_topic_progress import TopicStatus, UserTopicProgress
 
@@ -34,10 +37,17 @@ async def test_new_user_has_zeroed_summary(client, user_payload):
     assert body["current_streak_days"] == 0
     assert body["total_study_minutes"] == 0
     assert len(body["last_12_weeks"]) == 12 * 7
-    assert len(body["locked_insights"]) > 0
+    assert body["locked_insights"] == []
 
     # No data yet anywhere means clear gaps, not placeholder numbers.
-    assert body["skill_scores"] == {"grammar": None, "vocabulary": None, "speaking": None}
+    assert body["skill_scores"] == {
+        "grammar": None,
+        "vocabulary": None,
+        "speaking": None,
+        "reading": None,
+        "listening": None,
+        "writing": None,
+    }
     assert body["weakest_topics"] == []
     assert body["strongest_topics"] == []
     assert body["predicted_milestone"] is None
@@ -137,7 +147,10 @@ async def test_reviewed_vocabulary_produces_vocabulary_skill_score(client, user_
 
 async def test_scored_speech_turn_produces_speaking_score(client, user_payload, monkeypatch):
     monkeypatch.setattr(
-        "app.services.speech_service.transcribe_audio", lambda audio_bytes: "Hallo!"
+        "app.services.speech_service.transcribe_audio",
+        lambda audio_bytes: TranscriptionResult(
+            text="Hallo!", pronunciation_score=90, fluency_score=80
+        ),
     )
     monkeypatch.setattr(
         "app.services.speech_service.run_conversation_turn",
@@ -164,6 +177,75 @@ async def test_scored_speech_turn_produces_speaking_score(client, user_payload, 
 
     summary = (await client.get("/api/v1/dashboard/summary", headers=headers)).json()
     assert summary["skill_scores"]["speaking"] == 85.0
+
+
+async def test_correct_reading_attempt_produces_reading_skill_score(
+    client, user_payload, db_session
+):
+    token = await _register_and_login(client, user_payload)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    passage = (await client.get("/api/v1/reading/passages/random", headers=headers)).json()
+    db_passage = await db_session.get(ReadingPassage, uuid.UUID(passage["id"]))
+    correct_index = db_passage.correct_option_index
+
+    await client.post(
+        "/api/v1/reading/attempts",
+        json={"passage_id": passage["id"], "selected_option_index": correct_index},
+        headers=headers,
+    )
+
+    summary = (await client.get("/api/v1/dashboard/summary", headers=headers)).json()
+    assert summary["skill_scores"]["reading"] == 100.0
+
+
+async def test_correct_listening_attempt_produces_listening_skill_score(
+    client, user_payload, db_session
+):
+    token = await _register_and_login(client, user_payload)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    script = (await client.get("/api/v1/listening/scripts/random", headers=headers)).json()
+    db_script = await db_session.get(ListeningScript, uuid.UUID(script["id"]))
+    correct_index = db_script.correct_option_index
+
+    await client.post(
+        "/api/v1/listening/attempts",
+        json={"script_id": script["id"], "selected_option_index": correct_index},
+        headers=headers,
+    )
+
+    summary = (await client.get("/api/v1/dashboard/summary", headers=headers)).json()
+    assert summary["skill_scores"]["listening"] == 100.0
+
+
+async def test_scored_writing_submission_produces_writing_skill_score(
+    client, user_payload, monkeypatch
+):
+    monkeypatch.setattr(
+        "app.services.writing_service.run_writing_grading",
+        lambda prompt_text, submitted_text, cefr_level: {
+            "grammar_score": 80,
+            "vocabulary_score": 70,
+            "task_completion_score": 90,
+            "feedback": "Good effort.",
+            "input_tokens": 40,
+            "output_tokens": 30,
+        },
+    )
+
+    token = await _register_and_login(client, user_payload)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    prompt = (await client.get("/api/v1/writing/prompts/random", headers=headers)).json()
+    await client.post(
+        "/api/v1/writing/submissions",
+        json={"prompt_id": prompt["id"], "submitted_text": "Ich heiße Ada."},
+        headers=headers,
+    )
+
+    summary = (await client.get("/api/v1/dashboard/summary", headers=headers)).json()
+    assert summary["skill_scores"]["writing"] == 80.0  # (80 + 70 + 90) / 3
 
 
 async def test_predicted_milestone_appears_with_real_mastery_history(

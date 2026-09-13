@@ -18,17 +18,25 @@ export function TurnCard({ turn }: { turn: SpeechTurnRead }) {
       >
         <p>{turn.text}</p>
         {audioUrl && <audio controls src={audioUrl} className="h-8 w-56" />}
-        {isUser && (turn.grammar_score !== null || turn.vocabulary_score !== null) && (
-          <div className="flex flex-col gap-1 rounded-md bg-background/20 px-2.5 py-2 text-xs">
-            <div className="flex gap-4">
-              {turn.grammar_score !== null && <span>Grammar: {turn.grammar_score}/100</span>}
-              {turn.vocabulary_score !== null && (
-                <span>Vocabulary: {turn.vocabulary_score}/100</span>
-              )}
+        {isUser &&
+          (turn.grammar_score !== null ||
+            turn.vocabulary_score !== null ||
+            turn.pronunciation_score !== null ||
+            turn.fluency_score !== null) && (
+            <div className="flex flex-col gap-1 rounded-md bg-background/20 px-2.5 py-2 text-xs">
+              <div className="flex flex-wrap gap-4">
+                {turn.grammar_score !== null && <span>Grammar: {turn.grammar_score}/100</span>}
+                {turn.vocabulary_score !== null && (
+                  <span>Vocabulary: {turn.vocabulary_score}/100</span>
+                )}
+                {turn.pronunciation_score !== null && (
+                  <span>Pronunciation: {turn.pronunciation_score}/100</span>
+                )}
+                {turn.fluency_score !== null && <span>Fluency: {turn.fluency_score}/100</span>}
+              </div>
+              {turn.feedback && <p className="opacity-90">{turn.feedback}</p>}
             </div>
-            {turn.feedback && <p className="opacity-90">{turn.feedback}</p>}
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

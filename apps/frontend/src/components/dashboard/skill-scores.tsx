@@ -4,6 +4,9 @@ const LABELS: Record<keyof SkillScoresType, string> = {
   grammar: "Grammar",
   vocabulary: "Vocabulary",
   speaking: "Speaking",
+  reading: "Reading",
+  listening: "Listening",
+  writing: "Writing",
 };
 
 export function SkillScores({ scores }: { scores: SkillScoresType }) {

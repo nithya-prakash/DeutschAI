@@ -14,11 +14,14 @@ from app.ai.ml.forgetting_curve import days_since, is_at_risk, retention_probabi
 from app.ai.ml.habit_model import best_study_day, consistency_score
 from app.domain.schemas.dashboard import PredictedMilestone, SkillScores, TopicRanking
 from app.models.user_topic_progress import TopicStatus
+from app.repositories.listening_repository import ListeningAttemptRepository
 from app.repositories.memory_repository import MemoryRepository
 from app.repositories.quiz_repository import QuizAttemptRepository
+from app.repositories.reading_repository import ReadingAttemptRepository
 from app.repositories.speech_conversation_repository import SpeechConversationRepository
 from app.repositories.user_topic_progress_repository import UserTopicProgressRepository
 from app.repositories.vocabulary_repository import VocabularyRepository
+from app.repositories.writing_repository import WritingSubmissionRepository
 from app.services.topics_service import TopicsService
 
 TOP_RANKED_TOPICS = 3
@@ -117,9 +120,17 @@ class AnalyticsService:
         ]
 
         speaking_score = await self._speaking_score(user_id)
+        reading_score = await self._reading_score(user_id)
+        listening_score = await self._listening_score(user_id)
+        writing_score = await self._writing_score(user_id)
 
         skill_scores = SkillScores(
-            grammar=grammar_score, vocabulary=vocabulary_score, speaking=speaking_score
+            grammar=grammar_score,
+            vocabulary=vocabulary_score,
+            speaking=speaking_score,
+            reading=reading_score,
+            listening=listening_score,
+            writing=writing_score,
         )
         return skill_scores, weakest, strongest
 
@@ -147,6 +158,25 @@ class AnalyticsService:
             (turn.grammar_score + turn.vocabulary_score) / 2
             for turn in turns
             if turn.grammar_score is not None and turn.vocabulary_score is not None
+        ]
+        return sum(scores) / len(scores) if scores else None
+
+    async def _reading_score(self, user_id: uuid.UUID) -> float | None:
+        results = await ReadingAttemptRepository(self.session).list_is_correct_for_user(user_id)
+        return 100.0 * sum(results) / len(results) if results else None
+
+    async def _listening_score(self, user_id: uuid.UUID) -> float | None:
+        results = await ListeningAttemptRepository(self.session).list_is_correct_for_user(user_id)
+        return 100.0 * sum(results) / len(results) if results else None
+
+    async def _writing_score(self, user_id: uuid.UUID) -> float | None:
+        submissions = await WritingSubmissionRepository(self.session).list_scored_for_user(user_id)
+        scores = [
+            (s.grammar_score + s.vocabulary_score + s.task_completion_score) / 3
+            for s in submissions
+            if s.grammar_score is not None
+            and s.vocabulary_score is not None
+            and s.task_completion_score is not None
         ]
         return sum(scores) / len(scores) if scores else None
 

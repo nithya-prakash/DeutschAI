@@ -34,6 +34,9 @@ export interface SkillScores {
   grammar: number | null;
   vocabulary: number | null;
   speaking: number | null;
+  reading: number | null;
+  listening: number | null;
+  writing: number | null;
 }
 
 export interface TopicRanking {
@@ -190,6 +193,53 @@ export interface QuizAttemptResult {
   explanation: string;
 }
 
+// --- Reading comprehension ---
+
+export interface ReadingPassageRead {
+  id: string;
+  cefr_level: CEFRLevel;
+  passage_text: string;
+  question: string;
+  options: string[];
+}
+
+export interface ReadingAttemptResult {
+  is_correct: boolean;
+  correct_option_index: number;
+  explanation: string;
+}
+
+// --- Listening comprehension ---
+
+export interface ListeningScriptRead {
+  id: string;
+  cefr_level: CEFRLevel;
+  question: string;
+  options: string[];
+}
+
+export interface ListeningAttemptResult {
+  is_correct: boolean;
+  correct_option_index: number;
+  explanation: string;
+}
+
+// --- Writing exercise ---
+
+export interface WritingPromptRead {
+  id: string;
+  cefr_level: CEFRLevel;
+  prompt_text: string;
+}
+
+export interface WritingSubmissionResult {
+  id: string;
+  grammar_score: number | null;
+  vocabulary_score: number | null;
+  task_completion_score: number | null;
+  feedback: string | null;
+}
+
 export type MemoryType = "mistake" | "forgotten_word" | "pronunciation_issue" | "note";
 
 export interface MemoryRead {
@@ -234,6 +284,8 @@ export interface SpeechTurnRead {
   grammar_score: number | null;
   vocabulary_score: number | null;
   feedback: string | null;
+  pronunciation_score: number | null;
+  fluency_score: number | null;
   created_at: string;
 }
 

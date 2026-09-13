@@ -55,6 +55,12 @@ class SpeechTurn(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     vocabulary_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Also USER-turn-only, but derived from the STT wrapper's own decode
+    # signal (app/ai/speech/stt.py), not from the Conversation Agent — Claude
+    # only ever sees text, so it has no audio signal to judge either from.
+    pronunciation_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    fluency_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     conversation: Mapped["SpeechConversation"] = relationship(back_populates="turns")
 
     def __repr__(self) -> str:

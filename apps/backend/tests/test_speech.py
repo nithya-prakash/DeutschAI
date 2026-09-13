@@ -11,21 +11,82 @@ Split the same way as tests/test_tutor.py:
 """
 from types import SimpleNamespace
 
-from app.ai.speech.stt import transcribe
+from app.ai.speech.stt import TranscriptionResult, transcribe
 from app.ai.speech.tts import synthesize
 
 # --- Wrapper-level tests (no network, no model download) ---
 
 
+def _word(word: str, start: float, end: float, probability: float) -> SimpleNamespace:
+    return SimpleNamespace(word=word, start=start, end=end, probability=probability)
+
+
 class FakeWhisperModel:
-    def transcribe(self, audio_path: str, language: str):
-        segments = [SimpleNamespace(text="Hallo"), SimpleNamespace(text=" Welt.")]
+    """Fake carrying just enough of faster-whisper's real Segment/Word shape
+    (word-level start/end/probability) for the pronunciation/fluency
+    formulas in app/ai/speech/stt.py to exercise against."""
+
+    def __init__(self, words: list[SimpleNamespace] | None = None) -> None:
+        self._words = words if words is not None else [
+            _word("Hallo", 0.0, 0.4, 0.95),
+            _word("Welt.", 0.5, 0.9, 0.9),
+        ]
+
+    def transcribe(self, audio_path: str, language: str, word_timestamps: bool):
+        # Splits the fake words across two segments (mirroring how real
+        # Whisper output is chunked), deriving each segment's text from its
+        # own words so an empty word list also yields empty text.
+        midpoint = len(self._words) // 2 + (len(self._words) % 2)
+        first_half, second_half = self._words[:midpoint], self._words[midpoint:]
+        first_text = "".join(f" {w.word}" for w in first_half).strip()
+        second_text = "".join(f" {w.word}" for w in second_half)
+        segments = [
+            SimpleNamespace(text=first_text, words=first_half),
+            SimpleNamespace(text=second_text, words=second_half),
+        ]
         return segments, SimpleNamespace(language=language)
 
 
 def test_transcribe_joins_segment_text():
-    text = transcribe(FakeWhisperModel(), b"fake-audio-bytes")
-    assert text == "Hallo Welt."
+    result = transcribe(FakeWhisperModel(), b"fake-audio-bytes")
+    assert result.text == "Hallo Welt."
+
+
+def test_transcribe_computes_pronunciation_and_fluency_scores():
+    result = transcribe(FakeWhisperModel(), b"fake-audio-bytes")
+    assert result.pronunciation_score is not None
+    assert result.fluency_score is not None
+
+
+def test_lower_word_probability_lowers_pronunciation_score():
+    confident = transcribe(
+        FakeWhisperModel([_word("Hallo", 0.0, 0.4, 0.98), _word("Welt.", 0.5, 0.9, 0.97)]),
+        b"fake-audio-bytes",
+    )
+    unsure = transcribe(
+        FakeWhisperModel([_word("Hallo", 0.0, 0.4, 0.4), _word("Welt.", 0.5, 0.9, 0.35)]),
+        b"fake-audio-bytes",
+    )
+    assert unsure.pronunciation_score < confident.pronunciation_score
+
+
+def test_long_pause_lowers_fluency_score():
+    no_gap = transcribe(
+        FakeWhisperModel([_word("Hallo", 0.0, 0.4, 0.95), _word("Welt.", 0.45, 0.9, 0.95)]),
+        b"fake-audio-bytes",
+    )
+    long_gap = transcribe(
+        FakeWhisperModel([_word("Hallo", 0.0, 0.4, 0.95), _word("Welt.", 3.0, 3.45, 0.95)]),
+        b"fake-audio-bytes",
+    )
+    assert long_gap.fluency_score < no_gap.fluency_score
+
+
+def test_no_words_yields_null_scores():
+    result = transcribe(FakeWhisperModel([]), b"fake-audio-bytes")
+    assert result.text == ""
+    assert result.pronunciation_score is None
+    assert result.fluency_score is None
 
 
 class FakeVoice:
@@ -66,7 +127,10 @@ def _fake_conversation_turn(reply="Welchen Film hast du gesehen?", grammar=70, v
 
 async def test_submit_turn_without_api_key_returns_503(client, user_payload, monkeypatch):
     monkeypatch.setattr(
-        "app.services.speech_service.transcribe_audio", lambda audio_bytes: "Hallo"
+        "app.services.speech_service.transcribe_audio",
+        lambda audio_bytes: TranscriptionResult(
+            text="Hallo", pronunciation_score=90, fluency_score=80
+        ),
     )
 
     token = await _register_and_login(client, user_payload)
@@ -92,7 +156,9 @@ async def test_submit_turn_rejects_empty_audio(client, user_payload):
 async def test_submit_turn_persists_conversation_and_scores(client, user_payload, monkeypatch):
     monkeypatch.setattr(
         "app.services.speech_service.transcribe_audio",
-        lambda audio_bytes: "Ich habe gestern ins Kino gegangen.",
+        lambda audio_bytes: TranscriptionResult(
+            text="Ich habe gestern ins Kino gegangen.", pronunciation_score=88, fluency_score=75
+        ),
     )
     monkeypatch.setattr(
         "app.services.speech_service.run_conversation_turn", _fake_conversation_turn()
@@ -114,6 +180,8 @@ async def test_submit_turn_persists_conversation_and_scores(client, user_payload
     assert body["user_turn"]["text"] == "Ich habe gestern ins Kino gegangen."
     assert body["user_turn"]["grammar_score"] == 70
     assert body["user_turn"]["vocabulary_score"] == 85
+    assert body["user_turn"]["pronunciation_score"] == 88
+    assert body["user_turn"]["fluency_score"] == 75
     assert body["assistant_turn"]["text"] == "Welchen Film hast du gesehen?"
     assert body["assistant_turn"]["grammar_score"] is None
     conversation_id = body["conversation_id"]
@@ -147,7 +215,10 @@ async def test_submit_turn_persists_conversation_and_scores(client, user_payload
 
 async def test_cannot_access_another_users_speech_conversation(client, user_payload, monkeypatch):
     monkeypatch.setattr(
-        "app.services.speech_service.transcribe_audio", lambda audio_bytes: "Hallo"
+        "app.services.speech_service.transcribe_audio",
+        lambda audio_bytes: TranscriptionResult(
+            text="Hallo", pronunciation_score=90, fluency_score=80
+        ),
     )
     monkeypatch.setattr(
         "app.services.speech_service.run_conversation_turn", _fake_conversation_turn()

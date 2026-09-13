@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BookOpenCheck,
   BookOpenText,
   CalendarClock,
+  Headphones,
   LayoutDashboard,
   ListChecks,
   LogOut,
   MessageCircleQuestion,
   Mic,
+  PenLine,
   Settings,
   ShieldCheck,
   SquareCheckBig,
@@ -27,6 +30,9 @@ const NAV_ITEMS = [
   { href: "/tutor", label: "Tutor", icon: MessageCircleQuestion },
   { href: "/conversation", label: "Conversation", icon: Mic },
   { href: "/quiz", label: "Quiz", icon: SquareCheckBig },
+  { href: "/reading", label: "Reading", icon: BookOpenCheck },
+  { href: "/listening", label: "Listening", icon: Headphones },
+  { href: "/writing", label: "Writing", icon: PenLine },
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

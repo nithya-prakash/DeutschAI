@@ -6,8 +6,8 @@ messaging — computed by `AnalyticsService` / `MotivationService` from
 actual usage data. Every field is nullable (or an empty list) exactly
 where the underlying data doesn't exist yet for a given user, so the
 frontend can render a clear gap instead of a placeholder number.
-`locked_insights` lists what's genuinely still missing platform-wide
-(listening/reading/writing have no scoring signal yet).
+`locked_insights` lists whatever is still genuinely missing platform-wide —
+empty once every skill has a real exercise generating its score.
 """
 import uuid
 from datetime import date, datetime
@@ -28,6 +28,9 @@ class SkillScores(BaseModel):
     grammar: float | None
     vocabulary: float | None
     speaking: float | None
+    reading: float | None
+    listening: float | None
+    writing: float | None
 
 
 class TopicRanking(BaseModel):

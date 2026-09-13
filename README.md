@@ -43,13 +43,23 @@ technical design.
   get a transcript (`faster-whisper`, local, no API key), a Claude-generated
   reply from a LangGraph Conversation Agent scoring your grammar/vocabulary,
   and a synthesized spoken reply (Piper, local, no API key). Pronunciation
-  and fluency scoring are not yet implemented and are shown as locked in the UI
+  and fluency scores are derived from the STT engine's own decode signal
+  (word-level confidence and timing) — heuristic proxies, not a certified
+  phonetic assessment
+- **Reading comprehension** (`/reading`) and **listening comprehension**
+  (`/listening`) — short passages/clips with one comprehension question
+  each, graded deterministically like the quiz. Listening audio is
+  synthesized locally via Piper and cached in object storage
+- **Writing practice** (`/writing`) — respond to a prompt in German; a
+  Writing Agent (same LangGraph shape as Conversation Mode) grades grammar,
+  vocabulary, and task completion via Claude, with brief feedback
 - **Recommendation Engine & Analytics** (on `/dashboard`) — grammar/
-  vocabulary/speaking skill scores, weakest/strongest topic rankings, a
-  progress-forecast milestone, habit-intelligence figures (consistency
-  score, best study day), a "recommended focus" list (due vocab + weak
-  topics), and a Motivation Agent banner after a study gap — computed
-  entirely from your own learning history
+  vocabulary/speaking/reading/listening/writing skill scores,
+  weakest/strongest topic rankings, a progress-forecast milestone,
+  habit-intelligence figures (consistency score, best study day), a
+  "recommended focus" list (due vocab + weak topics), and a Motivation
+  Agent banner after a study gap — computed entirely from your own
+  learning history
 - **Admin panel** (`/admin`, superuser-only) — user management, per-service
   reachability checks (Postgres/Redis/Qdrant/MinIO), session activity
   across all users, LLM token usage by agent, and an error log. Sentry and
@@ -61,9 +71,6 @@ technical design.
 - The full local dev stack (Postgres, Redis, Qdrant, MinIO, backend, frontend,
   nginx) via one `docker compose up` — MinIO stores the recorded/synthesized
   audio blobs from Conversation Mode
-
-Listening, reading, and writing skill scores are not yet implemented and
-are shown on the dashboard as locked metrics.
 
 ## Quick start
 
@@ -116,7 +123,7 @@ cp .env.example .env   # then point POSTGRES_HOST/REDIS_HOST at localhost
 alembic upgrade head
 python -m app.ai.rag.ingest  # embeds the knowledge base into Qdrant (needed for /tutor)
 uvicorn app.main:app --reload
-pytest                  # 116 tests, in-memory SQLite/Qdrant + fake Redis, no external services needed
+pytest                  # 143 tests, in-memory SQLite/Qdrant + fake Redis, no external services needed
 ```
 
 ### Frontend

@@ -297,10 +297,12 @@ philosophy as the RAG pipeline's `fastembed` choice:
   level, and scores the grammar/vocabulary of what they just said, returned
   as JSON. If the model's output doesn't parse as valid JSON, the `parse`
   node falls back to the raw text as the reply, with scores left `None`.
-- Pronunciation and fluency are not scored, since Claude has no audio input
-  and there's no reliable signal for either; the frontend surfaces these as
-  locked metrics pending a dedicated pronunciation-analysis component (see
-  `FEATURES.md`'s Future Work).
+- Pronunciation and fluency scores come from the STT wrapper instead of
+  Claude, since Claude only ever sees text: `app/ai/speech/stt.py` derives
+  them from `faster-whisper`'s own decode signal — mean word-level
+  confidence for pronunciation, speaking rate and inter-word pause gaps for
+  fluency. Both are documented as heuristic proxies, not a certified
+  phonetic or fluency assessment.
 - `speech_conversations`/`speech_turns` are separate tables from
   `conversations`/`conversation_messages` (the Tutor Agent's text threads):
   different content shape (audio blobs, scores) and a different agent.
@@ -350,9 +352,23 @@ DB, no LLM, unit-testable in isolation):
   (`DATA_FETCH_DAYS`) rather than the display-only 12-week window, so
   habit-intelligence and motivation calculations see the learner's actual
   full history.
-- `LOCKED_INSIGHTS` reflects what genuinely has no data source yet
-  platform-wide: listening, reading, and writing scores, since no exercise
-  in the app currently evaluates those skills.
+- **Reading/Listening comprehension** (`app/services/reading_service.py`,
+  `app/services/listening_service.py`): deterministic MCQ grading, same
+  shape as the Assessment Agent's quiz grading — a wrong answer is recorded
+  as a Memory Agent mistake. Listening content is synthesized once via the
+  existing local Piper TTS wrapper and cached in object storage
+  (`app/ai/speech/synthesize_listening_audio.py` pre-synthesizes eagerly;
+  `ListeningService.get_audio` self-heals by synthesizing on first request
+  if that step was skipped).
+- **Writing exercise** (`app/ai/writing_agent.py`,
+  `app/services/writing_service.py`): the same LLM-graded LangGraph shape as
+  the Conversation Agent — one Claude call grades grammar, vocabulary, and
+  task completion, with the submitted text persisted before grading so it's
+  durable even if grading itself fails.
+- `LOCKED_INSIGHTS` is empty now that grammar, vocabulary, speaking,
+  reading, listening, and writing all have a real exercise/signal behind
+  them — kept as a list (not removed) so a future genuinely-locked insight
+  has somewhere to go.
 
 ## Monitoring, CI/CD & Admin Panel
 

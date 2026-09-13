@@ -32,15 +32,12 @@ DATA_FETCH_DAYS = 365
 
 # What's still genuinely missing platform-wide, kept explicit (rather than
 # silently omitted) so the frontend renders a clear "coming soon" instead
-# of a placeholder number. Grammar/vocabulary/speaking scores, topic
-# rankings, forecasting, and habit intelligence are all implemented and
-# removed from this list accordingly. Listening/reading/writing have no
-# scoring signal yet.
-LOCKED_INSIGHTS = [
-    "Listening comprehension score",
-    "Reading comprehension score",
-    "Writing score",
-]
+# of a placeholder number. Empty now that every skill score (grammar,
+# vocabulary, speaking, reading, listening, writing), topic rankings,
+# forecasting, and habit intelligence all have a real exercise/signal behind
+# them — kept as a list, not removed, so a future genuinely-locked insight
+# has somewhere to go.
+LOCKED_INSIGHTS: list[str] = []
 
 
 @dataclass

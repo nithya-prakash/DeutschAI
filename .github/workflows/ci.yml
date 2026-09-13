@@ -45,7 +45,9 @@ jobs:
   # broken Dockerfile now fails CI) but never pushes them anywhere. No
   # registry, no secrets, no cloud account, no cost — deploying to a real
   # target is a separate decision, made explicitly, not a side effect of
-  # this job existing. See docs/FEATURES.md for the future-work list.
+  # this job existing. This is a deliberate stopping point, not an
+  # oversight: nobody has yet chosen a hosting target for this project.
+  # See docs/FEATURES.md for the future-work list.
   deploy:
     runs-on: ubuntu-latest
     needs: [backend, frontend]

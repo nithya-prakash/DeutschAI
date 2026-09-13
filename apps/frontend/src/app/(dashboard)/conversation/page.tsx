@@ -3,7 +3,6 @@
 import * as React from "react";
 import { AlertTriangle } from "lucide-react";
 
-import { LockedInsights } from "@/components/dashboard/locked-insights";
 import { Recorder } from "@/components/conversation/recorder";
 import { TurnCard } from "@/components/conversation/turn-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +43,7 @@ export default function ConversationPage() {
         <h1 className="text-2xl font-semibold">Conversation Mode</h1>
         <p className="text-sm text-muted-foreground">
           Practice spoken German with an AI conversation partner. Speak a reply, and get it
-          transcribed, answered, and scored for grammar and vocabulary.
+          transcribed, answered, and scored for grammar, vocabulary, pronunciation, and fluency.
         </p>
       </div>
 
@@ -118,15 +117,6 @@ export default function ConversationPage() {
               Transcribing, generating a reply, and scoring…
             </p>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Coming soon</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LockedInsights insights={["Pronunciation scoring", "Fluency scoring"]} />
         </CardContent>
       </Card>
     </div>

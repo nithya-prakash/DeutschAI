@@ -34,6 +34,8 @@ schema, and implementation detail on each component below.
   that allocates available study time across vocabulary, grammar,
   listening, and speaking based on what's actually due and unmastered,
   with results cached per user/day in Redis
+- Reading comprehension exercises — short passages with a comprehension
+  question, graded deterministically like the Assessment Agent's quizzes
 
 ## 3. RAG Knowledge Base & AI Tutor
 
@@ -57,7 +59,15 @@ schema, and implementation detail on each component below.
   back through authenticated, ownership-checked endpoints
 - A Conversation Agent — a LangGraph graph backed by Claude — that runs
   turn-taking spoken dialogue practice and scores grammar and vocabulary
-  per turn from the transcript
+  per turn from the transcript, plus pronunciation and fluency scores
+  derived from the speech-to-text engine's own decode signal (word-level
+  confidence and timing) rather than from Claude, which only ever sees text
+- Listening comprehension exercises — short clips synthesized once via the
+  local Piper voice and cached, with a comprehension question graded
+  deterministically
+- A Writing Agent — the same LLM-graded LangGraph shape as the Conversation
+  Agent — that grades a submitted response to a prompt on grammar,
+  vocabulary, and task completion, with brief feedback
 
 ## 5. Machine Learning & Recommendations
 
@@ -76,17 +86,19 @@ schema, and implementation detail on each component below.
 
 ## 6. Analytics & Admin
 
-- Real skill scoring (grammar, vocabulary, speaking) and weakest/strongest
-  topic rankings, computed from quiz, vocabulary, and conversation history
+- Real skill scoring (grammar, vocabulary, speaking, reading, listening,
+  writing) and weakest/strongest topic rankings, computed from quiz,
+  vocabulary, conversation, reading, listening, and writing history
 - An admin panel, gated to superuser accounts, covering user management,
   infrastructure health checks (database, cache, vector store, object
   storage), LLM usage metrics, session activity, and an error log
 
 ## 7. Testing, CI/CD & Observability
 
-- Backend testing: a Pytest suite of 116 tests covering authentication,
+- Backend testing: a Pytest suite of 143 tests covering authentication,
   learning workflows, RAG retrieval, LangGraph agents, the speech
-  pipeline, ML components, analytics, the admin panel, and error handling
+  pipeline, reading/listening/writing exercises, ML components, analytics,
+  the admin panel, and error handling
 - Frontend testing: Vitest unit tests and a Playwright end-to-end suite
   covering authentication, the dashboard, vocabulary review, the AI tutor,
   and admin access control
@@ -112,7 +124,5 @@ Actions, Pytest, Vitest, Playwright, OpenTelemetry, Sentry
 ## Future Work
 
 - Production cloud deployment
-- Listening, reading, and writing skill evaluation
-- Improved pronunciation and fluency analysis
 - Expanded multilingual support beyond German
 - Additional learning content sources (e.g. podcasts, articles)

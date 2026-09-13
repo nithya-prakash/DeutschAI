@@ -82,19 +82,23 @@ class SpeechService:
             await self.session.flush()
             history = []
 
-        user_text = transcribe_audio(audio_bytes)
+        transcription = transcribe_audio(audio_bytes)
 
         user_extension = _EXTENSION_BY_CONTENT_TYPE.get(content_type, _DEFAULT_EXTENSION)
         user_key = f"speech/{conversation.id}/{uuid.uuid4()}{user_extension}"
         self.object_store.put_object(
             user_key, audio_bytes, content_type or "application/octet-stream"
         )
-        user_turn = await repo.add_turn(conversation.id, MessageRole.USER, user_text, user_key)
+        user_turn = await repo.add_turn(
+            conversation.id, MessageRole.USER, transcription.text, user_key
+        )
+        user_turn.pronunciation_score = transcription.pronunciation_score
+        user_turn.fluency_score = transcription.fluency_score
 
         # Propagates tutor_agent.LLMNotConfiguredError to the endpoint if no
         # API key is set — deliberately not caught here, see conversation_agent.py.
         result = run_conversation_turn(
-            user_text, cefr_level=user.cefr_level.value, history=history
+            transcription.text, cefr_level=user.cefr_level.value, history=history
         )
 
         user_turn.grammar_score = result["grammar_score"]

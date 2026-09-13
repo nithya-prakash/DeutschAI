@@ -1,9 +1,9 @@
 """Conversation Mode request/response schemas.
 
 Grammar/vocabulary scores are Claude-scored via the Conversation Agent.
-Pronunciation/fluency are never included here — there's no scoring signal
-for either yet, so the frontend shows them as locked instead of the API
-returning a placeholder number (see docs/ARCHITECTURE.md)."""
+Pronunciation/fluency are derived from the STT wrapper's own decode signal
+instead (app/ai/speech/stt.py) — heuristic proxies, not a certified
+assessment, but real computed signal rather than a placeholder number."""
 import uuid
 from datetime import datetime
 
@@ -21,6 +21,8 @@ class SpeechTurnRead(BaseModel):
     grammar_score: int | None
     vocabulary_score: int | None
     feedback: str | None
+    pronunciation_score: int | None
+    fluency_score: int | None
     created_at: datetime
 
 

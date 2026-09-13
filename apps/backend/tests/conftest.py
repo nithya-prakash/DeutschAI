@@ -26,10 +26,20 @@ from sqlalchemy.pool import StaticPool  # noqa: E402
 
 from app.api.deps import get_object_storage, get_redis  # noqa: E402
 from app.domain.curriculum_reference import EVERYDAY_TOPICS, GRAMMAR_TOPICS  # noqa: E402
+from app.domain.listening_reference import LISTENING_SCRIPTS  # noqa: E402
 from app.domain.quiz_reference import QUIZ_QUESTIONS  # noqa: E402
+from app.domain.reading_reference import READING_PASSAGES  # noqa: E402
+from app.domain.writing_reference import WRITING_PROMPTS  # noqa: E402
 from app.infrastructure.database.session import get_db  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Base, GrammarTopic, QuizQuestion  # noqa: E402
+from app.models import (  # noqa: E402
+    Base,
+    GrammarTopic,
+    ListeningScript,
+    QuizQuestion,
+    ReadingPassage,
+    WritingPrompt,
+)
 from app.models.grammar_topic import TopicCategory  # noqa: E402
 
 test_engine = create_async_engine(
@@ -77,11 +87,84 @@ async def _seed_curriculum(conn) -> None:
     await conn.run_sync(_insert)
 
 
+async def _seed_reading_passages(conn) -> None:
+    """Mirrors the reading migration's seed data — the app models here, not
+    raw SQL, since this runs against the test engine via `run_sync`."""
+
+    def _insert(sync_conn) -> None:
+        session = Session(bind=sync_conn)
+        try:
+            for cefr_level, passage_text, question, options, correct_index, explanation in (
+                READING_PASSAGES
+            ):
+                session.add(
+                    ReadingPassage(
+                        cefr_level=cefr_level,
+                        passage_text=passage_text,
+                        question=question,
+                        options=options,
+                        correct_option_index=correct_index,
+                        explanation=explanation,
+                    )
+                )
+            session.commit()
+        finally:
+            session.close()
+
+    await conn.run_sync(_insert)
+
+
+async def _seed_listening_scripts(conn) -> None:
+    """Mirrors the listening migration's seed data (audio_object_key left
+    null, same as the real migration — synthesis is never exercised here)."""
+
+    def _insert(sync_conn) -> None:
+        session = Session(bind=sync_conn)
+        try:
+            for cefr_level, script_text, question, options, correct_index, explanation in (
+                LISTENING_SCRIPTS
+            ):
+                session.add(
+                    ListeningScript(
+                        cefr_level=cefr_level,
+                        script_text=script_text,
+                        audio_object_key=None,
+                        question=question,
+                        options=options,
+                        correct_option_index=correct_index,
+                        explanation=explanation,
+                    )
+                )
+            session.commit()
+        finally:
+            session.close()
+
+    await conn.run_sync(_insert)
+
+
+async def _seed_writing_prompts(conn) -> None:
+    """Mirrors the writing migration's seed data."""
+
+    def _insert(sync_conn) -> None:
+        session = Session(bind=sync_conn)
+        try:
+            for cefr_level, prompt_text in WRITING_PROMPTS:
+                session.add(WritingPrompt(cefr_level=cefr_level, prompt_text=prompt_text))
+            session.commit()
+        finally:
+            session.close()
+
+    await conn.run_sync(_insert)
+
+
 @pytest_asyncio.fixture(autouse=True)
 async def _prepare_database() -> AsyncGenerator[None, None]:
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await _seed_curriculum(conn)
+        await _seed_reading_passages(conn)
+        await _seed_listening_scripts(conn)
+        await _seed_writing_prompts(conn)
     yield
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
