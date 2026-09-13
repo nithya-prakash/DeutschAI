@@ -36,8 +36,9 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Notifications</CardTitle>
           <CardDescription>
-            Daily reminders and streak-recovery nudges are powered by the Motivation Agent,
-            landing in a later phase. Nothing to configure yet.
+            The Motivation Agent&apos;s encouragement currently appears as an in-app banner on
+            your dashboard after a study gap. Push/email reminders aren&apos;t implemented yet —
+            nothing to configure here.
           </CardDescription>
         </CardHeader>
       </Card>

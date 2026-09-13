@@ -70,7 +70,11 @@ services:
       SECRET_KEY: ${SECRET_KEY:-dev-only-change-me-in-production-0123456789}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-30}
-      BACKEND_CORS_ORIGINS: '["http://localhost:3000"]'
+      # Both origins are real entry points into the same stack: :3000 is the
+      # frontend container's own port, and the bare origin (:80) is how the
+      # nginx reverse proxy is reached — see the "Quick start" section of
+      # README.md, which documents both.
+      BACKEND_CORS_ORIGINS: '["http://localhost:3000", "http://localhost"]'
       POSTGRES_USER: ${POSTGRES_USER:-deutschai}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-deutschai}
       POSTGRES_HOST: postgres

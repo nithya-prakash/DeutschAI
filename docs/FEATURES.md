@@ -124,5 +124,7 @@ Actions, Pytest, Vitest, Playwright, OpenTelemetry, Sentry
 ## Future Work
 
 - Production cloud deployment
+- Push/email notifications for study reminders and streak recovery (the
+  Motivation Agent's messaging currently surfaces as an in-app banner only)
 - Expanded multilingual support beyond German
 - Additional learning content sources (e.g. podcasts, articles)
