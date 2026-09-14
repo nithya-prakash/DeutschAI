@@ -32,10 +32,11 @@ technical design.
   Redis per user/day
 - **AI Tutor** (`/tutor`) — a RAG-grounded LangGraph agent: retrieves from a
   Qdrant knowledge base (grammar notes embedded locally with `fastembed`, no
-  embedding API key needed) and generates an answer with Claude, tailored to
-  your CEFR level. Requires `ANTHROPIC_API_KEY` to generate responses;
-  without it, the endpoint returns a clear "not configured" message and the
-  rest of the app continues to function normally
+  embedding API key needed) and generates an answer, tailored to your CEFR
+  level. Needs an LLM configured (`ANTHROPIC_API_KEY` by default, **or a
+  free local model via Ollama — no payment required, see below**); without
+  either, the endpoint returns a clear "not configured" message and the rest
+  of the app continues to function normally
 - **Practice quiz** (`/quiz`) — seeded multiple-choice questions, graded
   deterministically. A wrong answer is recorded by the Memory Agent and
   shows up as a "Recent mistakes" card on the dashboard
@@ -89,6 +90,31 @@ docker compose up --build
 The backend entrypoint waits for Postgres and runs Alembic migrations
 automatically on container start — no manual migration step needed for a
 fresh clone.
+
+### Running the Tutor/Conversation/Writing Agents for free
+
+These three features need an LLM. By default that's Claude
+(`ANTHROPIC_API_KEY`, a paid key), but the app works just as well against a
+free local model via [Ollama](https://ollama.com) — no payment, no account:
+
+```bash
+ollama pull llama3.2   # or any other local model
+```
+
+Then in `.env`:
+
+```
+LLM_PROVIDER=openai
+LLM_BASE_URL=http://host.docker.internal:11434/v1
+LLM_MODEL=llama3.2
+```
+
+(Running the backend directly with `uvicorn`, outside Docker — see
+"Development" below — use `http://localhost:11434/v1` instead.) Restart the
+backend and `/tutor/ask`, Conversation Mode, and `/writing/submissions` all
+generate real, live responses from the local model. Answer quality tracks
+whatever model you point it at — a small local model is noticeably weaker
+than Claude, but it's a genuinely working, free path, not a stub.
 
 ## Repository layout
 

@@ -127,8 +127,8 @@ def run_conversation_turn(
     user_utterance: str, cefr_level: str, history: list[tuple[str, str]]
 ) -> ConversationTurnState:
     """Run the Conversation Agent graph against the real, configured chat
-    model. Raises tutor_agent.LLMNotConfiguredError if ANTHROPIC_API_KEY
-    isn't set."""
+    model. Raises tutor_agent.LLMNotConfiguredError if no LLM provider is
+    configured (see tutor_agent.get_chat_model)."""
     graph = build_conversation_graph(get_chat_model())
     return graph.invoke(
         {

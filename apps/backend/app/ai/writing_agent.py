@@ -122,7 +122,8 @@ def run_writing_grading(
     prompt_text: str, submitted_text: str, cefr_level: str
 ) -> WritingGradingState:
     """Run the Writing Agent graph against the real, configured chat model.
-    Raises tutor_agent.LLMNotConfiguredError if ANTHROPIC_API_KEY isn't set."""
+    Raises tutor_agent.LLMNotConfiguredError if no LLM provider is
+    configured (see tutor_agent.get_chat_model)."""
     graph = build_writing_graph(get_chat_model())
     return graph.invoke(
         {

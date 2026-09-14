@@ -42,9 +42,11 @@ schema, and implementation detail on each component below.
 - A curated German grammar knowledge base, chunked and embedded locally
   with `fastembed` (an ONNX runtime model, avoiding a GPU/torch dependency)
   and indexed in Qdrant for vector retrieval
-- A Tutor Agent — a retrieval-augmented LangGraph graph backed by Claude
-  (`langchain-anthropic`) — that grounds its explanations in retrieved
-  reference material and tailors them to the learner's CEFR level
+- A Tutor Agent — a retrieval-augmented LangGraph graph that grounds its
+  explanations in retrieved reference material and tailors them to the
+  learner's CEFR level. Backed by Claude by default (`langchain-anthropic`),
+  or any OpenAI-compatible endpoint via `langchain-openai` — including a
+  free local model through Ollama, no paid key required (see README.md)
 - Persisted conversation history with per-user ownership checks
 - A deterministic Assessment Agent (multiple-choice quizzes, graded by
   index comparison — no LLM call needed) and a Memory Agent that records
@@ -112,8 +114,8 @@ schema, and implementation detail on each component below.
 ## Technology Stack
 
 **Backend:** FastAPI, SQLAlchemy (async), Alembic, PostgreSQL, Redis,
-Qdrant, MinIO, LangGraph, Claude (Anthropic), fastembed, faster-whisper,
-Piper TTS
+Qdrant, MinIO, LangGraph, Claude (Anthropic) or a local model via Ollama/any
+OpenAI-compatible endpoint, fastembed, faster-whisper, Piper TTS
 
 **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS, TanStack
 Query, Zustand

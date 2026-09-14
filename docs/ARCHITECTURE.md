@@ -219,10 +219,10 @@ re-running ingestion overwrites rather than duplicates.
 **Retrieval** (`app/ai/rag/retriever.py`): embeds a query with the same model
 and returns the top-k most similar chunks by cosine similarity.
 
-**Generation** (`app/ai/tutor_agent.py`): a 2-node graph (`retrieve → generate`)
-using `langchain-anthropic`. Unlike the Planner Agent, this one genuinely needs
-generation — explaining a grammar point simply, at the right CEFR level, isn't
-rule-based work — so it requires `ANTHROPIC_API_KEY`:
+**Generation** (`app/ai/tutor_agent.py`): a 2-node graph (`retrieve → generate`).
+Unlike the Planner Agent, this one genuinely needs generation — explaining a
+grammar point simply, at the right CEFR level, isn't rule-based work — so it
+requires a configured LLM:
 
 ```mermaid
 graph LR
@@ -234,9 +234,19 @@ graph LR
 than reaching for a global, which is what makes it testable without a real
 API key — `tests/test_tutor.py` passes a fake chat model and verifies
 retrieval + prompt assembly, while `get_chat_model()` (the production
-factory) raises `LLMNotConfiguredError` if the key is missing, caught by the
-endpoint and surfaced as an HTTP 503. The DB session rolls back cleanly on
-that exception, so no orphaned conversation rows are left behind.
+factory, also reused by the Conversation and Writing Agents) raises
+`LLMNotConfiguredError` if no provider is configured, caught by the endpoint
+and surfaced as an HTTP 503. The DB session rolls back cleanly on that
+exception, so no orphaned conversation rows are left behind.
+
+`get_chat_model()` supports two providers, switched by `LLM_PROVIDER`:
+`"anthropic"` (default) builds a `ChatAnthropic` from `ANTHROPIC_API_KEY`;
+`"openai"` builds a `ChatOpenAI` against any OpenAI-compatible endpoint via
+`LLM_BASE_URL` — including a local Ollama server, which needs no API key at
+all. Both are `langchain_core.BaseChatModel` implementations, so nothing
+else in `tutor_agent.py`, `conversation_agent.py`, or `writing_agent.py`
+needs to know which provider is active — they all just call
+`chat_model.invoke([...])`.
 
 `TutorService` wraps the graph with conversation persistence
 (`conversations` / `conversation_messages`, with ownership checks) — the

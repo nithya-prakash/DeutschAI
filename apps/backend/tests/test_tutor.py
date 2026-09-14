@@ -14,7 +14,13 @@ from types import SimpleNamespace
 import pytest
 
 from app.ai.rag.retriever import RetrievedChunk
-from app.ai.tutor_agent import LLMNotConfiguredError, build_tutor_graph, get_chat_model
+from app.ai.tutor_agent import (
+    LLMNotConfiguredError,
+    build_tutor_graph,
+    get_active_model_name,
+    get_chat_model,
+    settings,
+)
 
 
 class FakeChatModel:
@@ -43,6 +49,40 @@ def test_get_chat_model_raises_without_api_key():
     get_chat_model.cache_clear()
     with pytest.raises(LLMNotConfiguredError):
         get_chat_model()
+
+
+def test_get_chat_model_openai_without_base_url_or_key_raises(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", None)
+    monkeypatch.setattr(settings, "LLM_API_KEY", None)
+    get_chat_model.cache_clear()
+    with pytest.raises(LLMNotConfiguredError, match="LLM_PROVIDER=openai"):
+        get_chat_model()
+    get_chat_model.cache_clear()
+
+
+def test_get_chat_model_openai_with_base_url_returns_chat_openai(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://localhost:11434/v1")
+    monkeypatch.setattr(settings, "LLM_MODEL", "llama3.2")
+    get_chat_model.cache_clear()
+    model = get_chat_model()
+    # Real ChatOpenAI construction (no network call) — confirms the local
+    # server URL and model name were actually wired through, not just that
+    # no exception was raised.
+    assert model.openai_api_base == "http://localhost:11434/v1"
+    assert model.model_name == "llama3.2"
+    get_chat_model.cache_clear()
+
+
+def test_get_active_model_name_reflects_provider(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "anthropic")
+    monkeypatch.setattr(settings, "ANTHROPIC_MODEL", "claude-sonnet-5")
+    assert get_active_model_name() == "claude-sonnet-5"
+
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai")
+    monkeypatch.setattr(settings, "LLM_MODEL", "llama3.2")
+    assert get_active_model_name() == "llama3.2"
 
 
 def test_tutor_graph_retrieves_and_generates(monkeypatch):

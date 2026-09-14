@@ -4,12 +4,23 @@ knowledge base, tailored to the learner's CEFR level.
 A 2-node LangGraph graph (retrieve -> generate). Unlike the Planner Agent,
 this one genuinely needs generation — explaining a grammar point in plain
 language, simplified to the right level, isn't something a rule-based system
-can do. That means it genuinely needs `ANTHROPIC_API_KEY` configured.
+can do. That means it genuinely needs a configured LLM.
+
+`get_chat_model()` is also reused by the Conversation and Writing Agents
+(they both import it from here rather than duplicating a client factory),
+so this module is the single place that decides which provider is active.
 
 Fails loudly rather than faking a response: `get_chat_model()` raises
-`LLMNotConfiguredError` if the key is missing, checked lazily (at call time,
-not import time) so the rest of the app works fine with no key set — only
-`/tutor/ask` is affected, and it surfaces this as a clear HTTP 503.
+`LLMNotConfiguredError` if no provider is configured, checked lazily (at call
+time, not import time) so the rest of the app works fine with no key set —
+only the three LLM-backed endpoints are affected, each surfacing this as a
+clear HTTP 503.
+
+Two providers are supported. `LLM_PROVIDER=anthropic` (default) talks to
+Claude via `ANTHROPIC_API_KEY`. `LLM_PROVIDER=openai` talks to any
+OpenAI-compatible chat endpoint via `langchain_openai.ChatOpenAI` — this is
+what makes a local, free model (e.g. Ollama, via `LLM_BASE_URL`) a genuine
+alternative to a paid Claude key, not just a config stub. See .env.example.
 """
 from functools import lru_cache
 from typing import TypedDict
@@ -17,6 +28,7 @@ from typing import TypedDict
 from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
 from langgraph.graph import END, StateGraph
 
 from app.ai.rag.retriever import RetrievedChunk, retrieve
@@ -58,12 +70,30 @@ class TutorState(TypedDict):
 
 @lru_cache
 def get_chat_model() -> BaseChatModel:
+    if settings.LLM_PROVIDER == "openai":
+        if not settings.LLM_BASE_URL and not settings.LLM_API_KEY:
+            raise LLMNotConfiguredError(
+                "LLM_PROVIDER=openai needs LLM_BASE_URL (e.g. a local Ollama server) "
+                "or LLM_API_KEY set — see .env.example."
+            )
+        return ChatOpenAI(
+            model=settings.LLM_MODEL,
+            api_key=settings.LLM_API_KEY or "not-needed-for-local-server",
+            base_url=settings.LLM_BASE_URL or None,
+        )
     if not settings.ANTHROPIC_API_KEY:
         raise LLMNotConfiguredError(
             "ANTHROPIC_API_KEY is not set — the Tutor Agent needs a real LLM to generate "
             "grounded answers. Set it in .env to enable /tutor/ask."
         )
     return ChatAnthropic(model=settings.ANTHROPIC_MODEL, api_key=settings.ANTHROPIC_API_KEY)
+
+
+def get_active_model_name() -> str:
+    """The model name actually in use, for LLM usage-tracking records
+    (LLMUsageEvent) — reflects whichever provider LLM_PROVIDER selects,
+    rather than always logging the Anthropic model name."""
+    return settings.LLM_MODEL if settings.LLM_PROVIDER == "openai" else settings.ANTHROPIC_MODEL
 
 
 def _retrieve_node(state: TutorState) -> TutorState:

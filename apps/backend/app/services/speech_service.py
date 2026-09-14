@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.conversation_agent import run_conversation_turn
 from app.ai.speech.stt import transcribe_audio
 from app.ai.speech.tts import synthesize_speech
-from app.core.config import get_settings
+from app.ai.tutor_agent import get_active_model_name
 from app.domain.schemas.speech import (
     SpeechConversationRead,
     SpeechConversationSummary,
@@ -23,8 +23,6 @@ from app.models.speech_conversation import SpeechConversation
 from app.models.user import User
 from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.speech_conversation_repository import SpeechConversationRepository
-
-settings = get_settings()
 
 # Known browser MediaRecorder mime types <-> a stable file extension, so the
 # original content-type survives the round trip through object storage
@@ -109,7 +107,7 @@ class SpeechService:
             LLMUsageEvent(
                 user_id=user.id,
                 agent_name="conversation",
-                model=settings.ANTHROPIC_MODEL,
+                model=get_active_model_name(),
                 input_tokens=result["input_tokens"],
                 output_tokens=result["output_tokens"],
             )

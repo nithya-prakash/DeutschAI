@@ -5,8 +5,7 @@ Built as a LangGraph graph (assess -> rank -> render), the same shape as
 `app/ai/planner_agent.py`, and for the same reason: ranking pre-fetched
 candidates by a real, precomputed score (forgetting-curve retention, mistake
 counts) doesn't need generation, so every node here is a deterministic
-Python function — no LLM call, matching the roadmap's explicit "not LLM
-calls" for this component.
+Python function — no LLM call needed for this component.
 """
 from typing import TypedDict
 

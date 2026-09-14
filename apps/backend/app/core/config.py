@@ -73,12 +73,20 @@ class Settings(BaseSettings):
     QDRANT_PORT: int = 6333
     QDRANT_COLLECTION: str = "grammar_knowledge_base"
 
-    # --- LLM (Tutor Agent) ---
-    # Left unset in local dev by default. The Tutor Agent fails loudly with a
-    # clear "not configured" error if this is missing rather than faking a
-    # response — see app/ai/tutor_agent.py.
+    # --- LLM (Tutor, Conversation, and Writing Agents) ---
+    # LLM_PROVIDER="anthropic" (default) uses ANTHROPIC_API_KEY/ANTHROPIC_MODEL,
+    # left unset in local dev by default — these three agents fail loudly with
+    # a clear "not configured" error if the key is missing rather than faking
+    # a response (see app/ai/tutor_agent.py's get_chat_model()).
+    # LLM_PROVIDER="openai" switches to any OpenAI-compatible chat endpoint —
+    # including a local Ollama server via LLM_BASE_URL, with no paid key
+    # needed (see .env.example for the exact local-Ollama setup).
     ANTHROPIC_API_KEY: str | None = None
     ANTHROPIC_MODEL: str = "claude-sonnet-5"
+    LLM_PROVIDER: Literal["anthropic", "openai"] = "anthropic"
+    LLM_MODEL: str = "llama3.2"
+    LLM_API_KEY: str | None = None
+    LLM_BASE_URL: str | None = None
 
     # --- Object storage (speech audio blobs) ---
     MINIO_ENDPOINT: str = "localhost:9000"

@@ -1,8 +1,8 @@
 """Writing exercise service: LLM-graded, same pattern as speech_service.py's
 Conversation Agent scoring. The submission row is created and flushed before
 grading, so the learner's text is durable even if grading itself fails
-(e.g. ANTHROPIC_API_KEY unset) — LLMNotConfiguredError propagates uncaught
-to the endpoint, same contract as tutor.py/speech.py.
+(e.g. no LLM provider configured) — LLMNotConfiguredError propagates
+uncaught to the endpoint, same contract as tutor.py/speech.py.
 
 No AIMemory mistake is written here — mirrors Conversation Mode (also
 LLM-scored), not Quiz/Reading/Listening (deterministic MCQ grading, where a
@@ -12,16 +12,14 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.tutor_agent import get_active_model_name
 from app.ai.writing_agent import run_writing_grading
-from app.core.config import get_settings
 from app.domain.schemas.writing import WritingPromptRead, WritingSubmissionResult
 from app.models.llm_usage_event import LLMUsageEvent
 from app.models.user import CEFRLevel, User
 from app.models.writing_submission import WritingSubmission
 from app.repositories.llm_usage_repository import LLMUsageRepository
 from app.repositories.writing_repository import WritingPromptRepository, WritingSubmissionRepository
-
-settings = get_settings()
 
 
 class PromptNotFoundError(Exception):
@@ -74,7 +72,7 @@ class WritingService:
             LLMUsageEvent(
                 user_id=user.id,
                 agent_name="writing",
-                model=settings.ANTHROPIC_MODEL,
+                model=get_active_model_name(),
                 input_tokens=result["input_tokens"],
                 output_tokens=result["output_tokens"],
             )
