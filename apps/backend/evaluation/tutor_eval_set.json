@@ -1,0 +1,550 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "in-01",
+   "kind": "in_scope",
+   "question": "How do I pronounce the German letter w?",
+   "cefr_level": "A1",
+   "topic": "Alphabet & pronunciation",
+   "must": [
+    [
+     "\\bv\\b",
+     "vater|\\\"v\\\"|like (an? )?(english )?v"
+    ]
+   ]
+  },
+  {
+   "id": "in-02",
+   "kind": "in_scope",
+   "question": "What do I write if my keyboard has no ß or umlauts?",
+   "cefr_level": "A1",
+   "topic": "Alphabet & pronunciation",
+   "must": [
+    [
+     "\\bss\\b"
+    ],
+    [
+     "\\bae\\b|\\boe\\b|\\bue\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-03",
+   "kind": "in_scope",
+   "question": "When should I use Sie instead of du?",
+   "cefr_level": "A1",
+   "topic": "Personal pronouns",
+   "must": [
+    [
+     "formal|polite"
+    ],
+    [
+     "stranger|official|older|service"
+    ]
+   ]
+  },
+  {
+   "id": "in-04",
+   "kind": "in_scope",
+   "question": "Why is a table called er in German?",
+   "cefr_level": "A1",
+   "topic": "Personal pronouns",
+   "must": [
+    [
+     "gender"
+    ],
+    [
+     "der tisch|masculine"
+    ]
+   ]
+  },
+  {
+   "id": "in-05",
+   "kind": "in_scope",
+   "question": "How do I conjugate machen for du?",
+   "cefr_level": "A1",
+   "topic": "Present tense (regular verbs)",
+   "must": [
+    [
+     "machst"
+    ]
+   ]
+  },
+  {
+   "id": "in-06",
+   "kind": "in_scope",
+   "question": "Why is it du arbeitest and not du arbeitst?",
+   "cefr_level": "A1",
+   "topic": "Present tense (regular verbs)",
+   "must": [
+    [
+     "arbeitest"
+    ],
+    [
+     "\\be\\b|extra|pronounc"
+    ]
+   ]
+  },
+  {
+   "id": "in-07",
+   "kind": "in_scope",
+   "question": "What is the conjugation of sein?",
+   "cefr_level": "A1",
+   "topic": "sein & haben",
+   "must": [
+    [
+     "\\bbin\\b"
+    ],
+    [
+     "\\bbist\\b"
+    ],
+    [
+     "\\bist\\b"
+    ],
+    [
+     "\\bsind\\b"
+    ],
+    [
+     "\\bseid\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-08",
+   "kind": "in_scope",
+   "question": "How do I say I am 20 years old in German?",
+   "cefr_level": "A1",
+   "topic": "sein & haben",
+   "must": [
+    [
+     "ich bin 20|ich bin zwanzig"
+    ],
+    [
+     "not .{0,20}haben|bin"
+    ]
+   ]
+  },
+  {
+   "id": "in-09",
+   "kind": "in_scope",
+   "question": "Which article does Mädchen take and why?",
+   "cefr_level": "A1",
+   "topic": "Definite articles (der/die/das)",
+   "must": [
+    [
+     "das"
+    ],
+    [
+     "-?chen|neuter|diminutive"
+    ]
+   ]
+  },
+  {
+   "id": "in-10",
+   "kind": "in_scope",
+   "question": "Which article do I use for nouns ending in -ung?",
+   "cefr_level": "A1",
+   "topic": "Definite articles (der/die/das)",
+   "must": [
+    [
+     "\\bdie\\b"
+    ],
+    [
+     "feminine"
+    ]
+   ]
+  },
+  {
+   "id": "in-11",
+   "kind": "in_scope",
+   "question": "How do I say some men without an article?",
+   "cefr_level": "A1",
+   "topic": "Indefinite articles (ein/eine)",
+   "must": [
+    [
+     "männer"
+    ],
+    [
+     "no (plural )?(indefinite )?article|without|einige"
+    ]
+   ]
+  },
+  {
+   "id": "in-12",
+   "kind": "in_scope",
+   "question": "What is the indefinite article for a feminine noun?",
+   "cefr_level": "A1",
+   "topic": "Indefinite articles (ein/eine)",
+   "must": [
+    [
+     "\\beine\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-13",
+   "kind": "in_scope",
+   "question": "What happens to der in the accusative?",
+   "cefr_level": "A1",
+   "topic": "Akkusativ case",
+   "must": [
+    [
+     "\\bden\\b"
+    ],
+    [
+     "masculine"
+    ]
+   ]
+  },
+  {
+   "id": "in-14",
+   "kind": "in_scope",
+   "question": "How do I find the accusative object in a sentence?",
+   "cefr_level": "A1",
+   "topic": "Akkusativ case",
+   "must": [
+    [
+     "wen|was"
+    ],
+    [
+     "object"
+    ]
+   ]
+  },
+  {
+   "id": "in-15",
+   "kind": "in_scope",
+   "question": "What is the difference between sein and ihr as his and her?",
+   "cefr_level": "A1",
+   "topic": "Possessive articles",
+   "must": [
+    [
+     "owner"
+    ],
+    [
+     "male|man|he|his"
+    ],
+    [
+     "female|woman|she|her"
+    ]
+   ]
+  },
+  {
+   "id": "in-16",
+   "kind": "in_scope",
+   "question": "How do I say my mother?",
+   "cefr_level": "A1",
+   "topic": "Possessive articles",
+   "must": [
+    [
+     "meine mutter"
+    ],
+    [
+     "\\be\\b|ending|feminine"
+    ]
+   ]
+  },
+  {
+   "id": "in-17",
+   "kind": "in_scope",
+   "question": "Where does the second verb go with a modal verb?",
+   "cefr_level": "A1",
+   "topic": "Modal verbs",
+   "must": [
+    [
+     "end"
+    ],
+    [
+     "infinitive"
+    ]
+   ]
+  },
+  {
+   "id": "in-18",
+   "kind": "in_scope",
+   "question": "What is the ich form of können?",
+   "cefr_level": "A1",
+   "topic": "Modal verbs",
+   "must": [
+    [
+     "\\bkann\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-19",
+   "kind": "in_scope",
+   "question": "How do I form a yes/no question in German?",
+   "cefr_level": "A1",
+   "topic": "W-questions & yes/no questions",
+   "must": [
+    [
+     "first|beginning|start"
+    ],
+    [
+     "verb"
+    ]
+   ]
+  },
+  {
+   "id": "in-20",
+   "kind": "in_scope",
+   "question": "Is it Wo wohnst du or Wo du wohnst?",
+   "cefr_level": "A1",
+   "topic": "W-questions & yes/no questions",
+   "must": [
+    [
+     "wo wohnst du"
+    ],
+    [
+     "second|verb"
+    ]
+   ]
+  },
+  {
+   "id": "in-21",
+   "kind": "in_scope",
+   "question": "When do I use kein instead of nicht?",
+   "cefr_level": "A1",
+   "topic": "Negation (nicht/kein)",
+   "must": [
+    [
+     "\\bkein"
+    ],
+    [
+     "noun"
+    ],
+    [
+     "\\bnicht\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-22",
+   "kind": "in_scope",
+   "question": "Where does nicht go when I negate the whole sentence?",
+   "cefr_level": "A1",
+   "topic": "Negation (nicht/kein)",
+   "must": [
+    [
+     "end"
+    ],
+    [
+     "komme heute nicht|clause|sentence"
+    ]
+   ]
+  },
+  {
+   "id": "in-23",
+   "kind": "in_scope",
+   "question": "What is the du imperative of kommen?",
+   "cefr_level": "A1",
+   "topic": "Imperative",
+   "must": [
+    [
+     "\\bkomm\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-24",
+   "kind": "in_scope",
+   "question": "How do I form a polite Sie command?",
+   "cefr_level": "A1",
+   "topic": "Imperative",
+   "must": [
+    [
+     "kommen sie|verb.{0,15}(first|before)|invert"
+    ],
+    [
+     "sie"
+    ]
+   ]
+  },
+  {
+   "id": "in-25",
+   "kind": "in_scope",
+   "question": "Which prepositions always take the accusative?",
+   "cefr_level": "A1",
+   "topic": "Prepositions",
+   "must": [
+    [
+     "\\bdurch\\b"
+    ],
+    [
+     "\\bfür\\b|fuer"
+    ],
+    [
+     "\\bohne\\b|\\bgegen\\b|\\bum\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-26",
+   "kind": "in_scope",
+   "question": "When do two-way prepositions like in take accusative versus dative?",
+   "cefr_level": "A1",
+   "topic": "Prepositions",
+   "must": [
+    [
+     "motion|wohin|direction|toward"
+    ],
+    [
+     "static|location|\\bwo\\b"
+    ]
+   ]
+  },
+  {
+   "id": "in-27",
+   "kind": "in_scope",
+   "question": "Why is it Heute trinke ich Kaffee?",
+   "cefr_level": "A1",
+   "topic": "Word order (verb-second)",
+   "must": [
+    [
+     "second"
+    ],
+    [
+     "verb"
+    ]
+   ]
+  },
+  {
+   "id": "in-28",
+   "kind": "in_scope",
+   "question": "Where does the verb go after weil?",
+   "cefr_level": "A1",
+   "topic": "Word order (verb-second)",
+   "must": [
+    [
+     "end"
+    ],
+    [
+     "subordinate|weil"
+    ]
+   ]
+  },
+  {
+   "id": "in-29",
+   "kind": "in_scope",
+   "question": "How do I form the Perfekt?",
+   "cefr_level": "A1",
+   "topic": "Perfekt tense basics",
+   "must": [
+    [
+     "haben|sein"
+    ],
+    [
+     "participle"
+    ]
+   ]
+  },
+  {
+   "id": "in-30",
+   "kind": "in_scope",
+   "question": "Which verbs take sein in the Perfekt?",
+   "cefr_level": "A1",
+   "topic": "Perfekt tense basics",
+   "must": [
+    [
+     "motion|movement|gehen|fahren"
+    ],
+    [
+     "change of state|change"
+    ]
+   ]
+  },
+  {
+   "id": "in-31",
+   "kind": "in_scope",
+   "question": "What does halb drei mean?",
+   "cefr_level": "A1",
+   "topic": "Numbers, time & dates",
+   "must": [
+    [
+     "2:30|half past two|2\\.30|14:30"
+    ],
+    [
+     "not|instead|rather"
+    ]
+   ]
+  },
+  {
+   "id": "in-32",
+   "kind": "in_scope",
+   "question": "How do I write 47 in German?",
+   "cefr_level": "A1",
+   "topic": "Numbers, time & dates",
+   "must": [
+    [
+     "siebenundvierzig"
+    ]
+   ]
+  },
+  {
+   "id": "out-01",
+   "kind": "out_of_scope",
+   "question": "How do I use the Genitiv case?",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  },
+  {
+   "id": "out-02",
+   "kind": "out_of_scope",
+   "question": "How do I form the Konjunktiv II?",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  },
+  {
+   "id": "out-03",
+   "kind": "out_of_scope",
+   "question": "How does the German passive voice work?",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  },
+  {
+   "id": "out-04",
+   "kind": "out_of_scope",
+   "question": "How do relative clauses with der, die and das work?",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  },
+  {
+   "id": "out-05",
+   "kind": "out_of_scope",
+   "question": "What are the adjective endings after a definite article?",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  },
+  {
+   "id": "out-06",
+   "kind": "out_of_scope",
+   "question": "How do I form the Plusquamperfekt?",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  },
+  {
+   "id": "out-07",
+   "kind": "out_of_scope",
+   "question": "What is the capital of Australia?",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  },
+  {
+   "id": "out-08",
+   "kind": "out_of_scope",
+   "question": "Write a Python function that sorts a list.",
+   "cefr_level": "A1",
+   "topic": null,
+   "must": []
+  }
+ ]
+}

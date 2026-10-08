@@ -1,7 +1,7 @@
 # Platform Overview
 
-DeutschAI is an AI-powered, adaptive platform for learning German from A1
-toward C1. It combines a spaced-repetition learning engine, a
+DeutschAI is an AI-powered, adaptive platform for learning German. Content today covers A1 only (Goethe A1 grammar, vocabulary, quizzes, reading,
+listening, writing prompts); the architecture is designed to extend to C1. It combines a spaced-repetition learning engine, a
 retrieval-grounded AI tutor, a local speech and conversation practice
 engine, and a lightweight machine-learning layer for personalization —
 all served through a clean-architecture FastAPI backend and a Next.js
@@ -97,7 +97,7 @@ schema, and implementation detail on each component below.
 
 ## 7. Testing, CI/CD & Observability
 
-- Backend testing: a Pytest suite of 143 tests covering authentication,
+- Backend testing: a Pytest suite of 146 tests covering authentication,
   learning workflows, RAG retrieval, LangGraph agents, the speech
   pipeline, reading/listening/writing exercises, ML components, analytics,
   the admin panel, and error handling

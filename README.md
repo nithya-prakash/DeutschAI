@@ -1,107 +1,39 @@
 # DeutschAI
 
-An AI-powered, adaptive platform for learning German from A1 to C1 — architected so
-additional languages (Spanish, French, Japanese, …) can be added later without
-reworking the core.
+A voice and agentic-AI German tutor for beginners: it explains grammar from its own notes, holds spoken conversations, grades writing and plans daily study.
 
-DeutschAI combines a spaced-repetition learning engine, a retrieval-grounded
-AI tutor, a local speech and conversation practice engine, and
-machine-learning-driven analytics and recommendations, served through a
-FastAPI backend and a Next.js frontend. See
-[`docs/FEATURES.md`](docs/FEATURES.md) for a full breakdown of platform
-capabilities and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the
-technical design.
+[![CI](https://github.com/nithya-prakash/DeutschAI/actions/workflows/ci.yml/badge.svg)](https://github.com/nithya-prakash/DeutschAI/actions/workflows/ci.yml) ![Python 3.12](https://img.shields.io/badge/python-3.12-blue) [![License: MIT](https://img.shields.io/github/license/nithya-prakash/DeutschAI)](LICENSE)
 
-## Demo
+![DeutschAI walkthrough: dashboard, vocabulary, curriculum, planner, quiz, reading, listening, writing and admin](docs/assets/demo.gif)
 
-![DeutschAI walkthrough: dashboard, vocabulary, curriculum, planner, quiz, reading, listening, writing, and the admin panel](docs/assets/demo.gif)
+**Content today is A1 only.** The architecture (per-user CEFR level and target language) is built to extend to C1, but no A2-C1 content exists.
 
-## Features
+## Headline results
 
-- Email/password registration and login (JWT access + refresh tokens)
-- User profile (name, CEFR level, target language)
-- A dashboard that logs study sessions and computes streaks, longest streak,
-  and weekly/total minutes — plus a GitHub-style heatmap of the last 12 weeks
-- **Vocabulary notebook** (`/vocabulary`) with genuine SM-2 spaced repetition —
-  Again/Hard/Good/Easy reviews adjust each word's ease factor and next-due date
-- **Curriculum roadmap** (`/curriculum`) — the Goethe-Zertifikat A1 grammar
-  syllabus + Sprechen topic list, click-to-cycle progress per topic
-- **Daily planner** (`/planner`) — a LangGraph agent (deterministic nodes, no
-  LLM call needed) allocates your available minutes across vocab/grammar/
-  listening/speaking based on what's actually due and unmastered, cached in
-  Redis per user/day
-- **AI Tutor** (`/tutor`) — a RAG-grounded LangGraph agent: retrieves from a
-  Qdrant knowledge base (grammar notes embedded locally with `fastembed`, no
-  embedding API key needed) and generates an answer, tailored to your CEFR
-  level. Needs an LLM configured (`ANTHROPIC_API_KEY` by default, **or a
-  free local model via Ollama — no payment required, see below**); without
-  either, the endpoint returns a clear "not configured" message and the rest
-  of the app continues to function normally
-- **Practice quiz** (`/quiz`) — seeded multiple-choice questions, graded
-  deterministically. A wrong answer is recorded by the Memory Agent and
-  shows up as a "Recent mistakes" card on the dashboard
-- **Conversation Mode** (`/conversation`) — record yourself speaking German,
-  get a transcript (`faster-whisper`, local, no API key), a Claude-generated
-  reply from a LangGraph Conversation Agent scoring your grammar/vocabulary,
-  and a synthesized spoken reply (Piper, local, no API key). Pronunciation
-  and fluency scores are derived from the STT engine's own decode signal
-  (word-level confidence and timing) — heuristic proxies, not a certified
-  phonetic assessment
-- **Reading comprehension** (`/reading`) and **listening comprehension**
-  (`/listening`) — short passages/clips with one comprehension question
-  each, graded deterministically like the quiz. Listening audio is
-  synthesized locally via Piper and cached in object storage
-- **Writing practice** (`/writing`) — respond to a prompt in German; a
-  Writing Agent (same LangGraph shape as Conversation Mode) grades grammar,
-  vocabulary, and task completion via Claude, with brief feedback
-- **Recommendation Engine & Analytics** (on `/dashboard`) — grammar/
-  vocabulary/speaking/reading/listening/writing skill scores,
-  weakest/strongest topic rankings, a progress-forecast milestone,
-  habit-intelligence figures (consistency score, best study day), a
-  "recommended focus" list (due vocab + weak topics), and a Motivation
-  Agent banner after a study gap — computed entirely from your own
-  learning history
-- **Admin panel** (`/admin`, superuser-only) — user management, per-service
-  reachability checks (Postgres/Redis/Qdrant/MinIO), session activity
-  across all users, LLM token usage by agent, and an error log. Sentry and
-  OpenTelemetry integrations activate once their respective settings
-  (`SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT`) are configured
-- Continuous integration builds both backend and frontend Docker images on
-  every push as a deploy-readiness check
-- Dark mode
-- The full local dev stack (Postgres, Redis, Qdrant, MinIO, backend, frontend,
-  nginx) via one `docker compose up` — MinIO stores the recorded/synthesized
-  audio blobs from Conversation Mode
+Tutor evaluation: 40 questions (32 in-scope A1 grammar, 8 out-of-scope), the app's own retrieval, local `qwen2.5:3b-instruct` via Ollama, rule-based metrics, no LLM judge ([method](docs/EVALUATION.md)).
 
-## Quick start
+| Measure | Result |
+|---|---|
+| Right grammar note in the top 4 retrieved chunks | 84% (27 of 32); top-1 59% |
+| Answer contains every key fact (strict regex, a lower bound) | 53% (17 of 32) |
+| Quoted German examples found in the retrieved text | 56% |
+| Out-of-scope questions flagged as outside the notes | 0 of 8 |
+| Backend tests | 146 passing |
+
+The Claude path is implemented but has **not** been run live yet; no Claude numbers are claimed.
+
+## Quickstart
+
+Needs Docker with Compose v2.
 
 ```bash
-cp .env.example .env
-cp apps/backend/.env.example apps/backend/.env
-cp apps/frontend/.env.example apps/frontend/.env
-
-docker compose up --build
+git clone https://github.com/nithya-prakash/DeutschAI.git && cd DeutschAI
+cp .env.example .env && cp apps/backend/.env.example apps/backend/.env && cp apps/frontend/.env.example apps/frontend/.env
+docker compose up --build -d
+docker compose exec backend python -m app.ai.rag.ingest    # loads the grammar notes into Qdrant
 ```
 
-- Frontend: http://localhost:3000
-- Backend API docs (Swagger): http://localhost:8000/api/v1/docs
-- Through the nginx reverse proxy: http://localhost
-
-The backend entrypoint waits for Postgres and runs Alembic migrations
-automatically on container start — no manual migration step needed for a
-fresh clone.
-
-### Running the Tutor/Conversation/Writing Agents for free
-
-These three features need an LLM. By default that's Claude
-(`ANTHROPIC_API_KEY`, a paid key), but the app works just as well against a
-free local model via [Ollama](https://ollama.com) — no payment, no account:
-
-```bash
-ollama pull llama3.2   # or any other local model
-```
-
-Then in `.env`:
+Open http://localhost:3000 (API docs: http://localhost:8000/api/v1/docs). Everything except the Tutor, Conversation and Writing agents works with no LLM configured. To enable them, set `ANTHROPIC_API_KEY` in `.env`, or use free local Ollama:
 
 ```
 LLM_PROVIDER=openai
@@ -109,60 +41,72 @@ LLM_BASE_URL=http://host.docker.internal:11434/v1
 LLM_MODEL=llama3.2
 ```
 
-(Running the backend directly with `uvicorn`, outside Docker — see
-"Development" below — use `http://localhost:11434/v1` instead.) Restart the
-backend and `/tutor/ask`, Conversation Mode, and `/writing/submissions` all
-generate real, live responses from the local model. Answer quality tracks
-whatever model you point it at — a small local model is noticeably weaker
-than Claude, but it's a genuinely working, free path, not a stub.
+| Variable | Used for |
+|---|---|
+| `SECRET_KEY`, `POSTGRES_PASSWORD`, `MINIO_*` | the stack (local defaults in `.env.example`) |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Claude for the three LLM agents |
+| `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL` | Ollama or any OpenAI-compatible server |
+| `SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT` | optional; unset means off |
 
-## Repository layout
+## How it works
 
-```
-deutschai/
-├── apps/
-│   ├── backend/          FastAPI + SQLAlchemy (async) + Alembic
-│   └── frontend/          Next.js (App Router) + TypeScript + Tailwind + shadcn/ui
-├── infra/
-│   └── nginx/              Reverse proxy config
-├── docs/
-│   ├── ARCHITECTURE.md    Clean-architecture layering, DB schema, request flow
-│   └── FEATURES.md         Platform capabilities and technology stack
-├── .github/workflows/     CI (lint + test + build on every push; a deploy
-│                          job builds both Docker images but pushes nowhere)
-└── docker-compose.yml
+A Next.js app talks to a FastAPI backend (Postgres, Redis, Qdrant, MinIO). Eight agents sit behind it: the Tutor retrieves from 16 A1 grammar notes (local `fastembed` embeddings) and generates an answer for the learner's level; Conversation and Writing make one LLM call per turn that replies and scores; Planner and Recommendation are deterministic LangGraph graphs; speech is local (`faster-whisper` in, Piper out). Flows and a sequence diagram: [docs/AGENTS.md](docs/AGENTS.md).
+
+```mermaid
+graph LR
+    U[Next.js app] --> A[FastAPI]
+    A --> G[LangGraph agents]
+    G -->|retrieve| Q[(Qdrant)]
+    G -->|generate| L[Claude or Ollama]
+    A --> S[Whisper / Piper]
+    A --> P[(Postgres)] & R[(Redis)] & M[(MinIO)]
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the backend layers
-fit together and [`docs/FEATURES.md`](docs/FEATURES.md) for a full breakdown
-of platform capabilities.
+## Usage
 
-## Development
-
-### Backend
+- **Tutor** `/tutor`: ask a grammar question, get an answer with its source notes (`POST /api/v1/tutor/ask`).
+- **Conversation** `/conversation`: record German, get transcript, reply, scores and spoken audio.
+- **Writing** `/writing`, **quiz** `/quiz`, **reading** `/reading`, **listening** `/listening`: graded practice.
+- **Vocabulary** `/vocabulary`: SM-2 spaced repetition. **Planner** `/planner`: daily plan from your due items.
+- **Dashboard**: streaks, skill scores, recommendations. **Admin** `/admin`: users, service checks, LLM token usage.
 
 ```bash
-cd apps/backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # then point POSTGRES_HOST/REDIS_HOST at localhost
-alembic upgrade head
-python -m app.ai.rag.ingest  # embeds the knowledge base into Qdrant (needed for /tutor)
-uvicorn app.main:app --reload
-pytest                  # 143 tests, in-memory SQLite/Qdrant + fake Redis, no external services needed
+# Re-run the tutor evaluation (from apps/backend, with an LLM configured)
+python -m evaluation.run_tutor_eval --label my-model
 ```
 
-### Frontend
+## Limitations
+
+- A1 content only; "A1 to C1" is a design goal, not a feature.
+- The Claude path is untested live. Only Ollama has run against a real model.
+- With a 3B local model the tutor invents facts and never says when a topic is outside its notes (0 of 8). Answer quality tracks the model.
+- Pronunciation and fluency scores are proxies from Whisper confidence and timing, not a phonetic assessment.
+- The tutor evaluation is small (40 questions), rule-based, and scored against notes this repo wrote itself. Conversation and Writing have no quality evaluation.
+- No hosted deployment; CI builds the Docker images but pushes nowhere.
+- Browser E2E tests (Playwright) need the full stack running.
+
+## Repo layout
+
+```
+apps/backend/    FastAPI, SQLAlchemy, Alembic, agents (app/ai), RAG notes, tests
+apps/backend/evaluation/   tutor eval set, runner, results
+apps/frontend/   Next.js, TypeScript, Tailwind, Vitest, Playwright (e2e/)
+infra/nginx/     reverse proxy
+docs/            AGENTS.md, EVALUATION.md, ARCHITECTURE.md, FEATURES.md, details.md
+docker-compose.yml, .github/workflows/ci.yml
+```
+
+## Checks
 
 ```bash
-cd apps/frontend
-npm install
-cp .env.example .env
-npm run dev
-npm run test            # Vitest unit tests
-npm run test:e2e         # Playwright — requires the full stack running
+cd apps/backend && pytest                 # 146 tests, in-memory SQLite and Qdrant, no services needed
+cd apps/backend && ruff check .
+cd apps/frontend && npm run lint && npm run typecheck && npm run test
+cd apps/frontend && npm run test:e2e      # Playwright, needs the stack running
 ```
 
-## License
+CI runs backend lint and tests, frontend lint, typecheck, tests and build, then builds both images.
 
-Unlicensed portfolio/demo project.
+## Roadmap and license
+
+Next: A2 content, a live Claude evaluation, a larger tutor evaluation set. MIT licensed ([LICENSE](LICENSE)). Full feature list: [docs/details.md](docs/details.md).

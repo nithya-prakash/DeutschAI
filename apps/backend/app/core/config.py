@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     # including a local Ollama server via LLM_BASE_URL, with no paid key
     # needed (see .env.example for the exact local-Ollama setup).
     ANTHROPIC_API_KEY: str | None = None
-    ANTHROPIC_MODEL: str = "claude-sonnet-5"
+    ANTHROPIC_MODEL: str = "claude-sonnet-5-5"
     LLM_PROVIDER: Literal["anthropic", "openai"] = "anthropic"
     LLM_MODEL: str = "llama3.2"
     LLM_API_KEY: str | None = None
