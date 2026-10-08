@@ -4,7 +4,7 @@ A voice and agentic-AI German tutor for beginners: it explains grammar from its 
 
 [![CI](https://github.com/nithya-prakash/DeutschAI/actions/workflows/ci.yml/badge.svg)](https://github.com/nithya-prakash/DeutschAI/actions/workflows/ci.yml) ![Python 3.12](https://img.shields.io/badge/python-3.12-blue) [![License: MIT](https://img.shields.io/github/license/nithya-prakash/DeutschAI)](LICENSE)
 
-![DeutschAI walkthrough: dashboard, vocabulary, curriculum, planner, quiz, reading, listening, writing and admin](docs/assets/demo.gif)
+![DeutschAI walkthrough: dashboard, vocabulary, curriculum, planner, quiz, reading, listening, writing, a live tutor answer from local Ollama, and the admin panel](docs/assets/demo.gif)
 
 **Content today is A1 only.** The architecture (per-user CEFR level and target language) is built to extend to C1, but no A2-C1 content exists.
 
